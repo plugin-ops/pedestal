@@ -1,0 +1,1 @@
+C:\Users\18678\Desktop\work\pedestal\pedestal\plugin>protoc -I proto/ proto/*.proto --go_out=plugins=grpc:proto/

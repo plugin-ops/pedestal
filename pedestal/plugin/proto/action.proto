@@ -1,0 +1,28 @@
+syntax = "proto3";
+package proto;
+option go_package = "./;proto";
+
+service Driver {
+  rpc Name(Empty) returns (String);
+  rpc Version(Empty) returns (Float32);
+  rpc Do(DoInput) returns (DoOutput);
+}
+
+message Empty {}
+
+message String {
+  string value = 1;
+}
+
+message Float32 {
+  float value = 1;
+}
+
+message DoInput {
+  repeated string value = 1;
+}
+
+message DoOutput {
+  repeated string value = 1;
+  string error = 2;
+}

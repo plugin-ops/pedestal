@@ -1,0 +1,2 @@
+# pedestal
+plugin pedestal
