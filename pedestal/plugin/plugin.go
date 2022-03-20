@@ -19,16 +19,17 @@ var (
 
 func AddPlugin(path string) error {
 	client := plugin.NewClient(&plugin.ClientConfig{
-		HandshakeConfig: handshakeConfig,
-		Plugins:         pluginMap,
-		Cmd:             exec.Command("./plugin/greeter"),
+		HandshakeConfig:  handshakeConfig,
+		Plugins:          pluginMap,
+		Cmd:              exec.Command("./plugin/greeter"),
+		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
 	})
 	defer client.Kill()
 	grpcClient, err := client.Client()
 	if err != nil {
 		return err
 	}
-	raw, err := grpcClient.Dispense("action")
+	raw, err := grpcClient.Dispense(PluginName)
 	// srv can only be proto.DriverClient
 	a := raw.(proto.DriverClient)
 
@@ -63,7 +64,7 @@ var handshakeConfig = plugin.HandshakeConfig{
 }
 
 var pluginMap = map[string]plugin.Plugin{
-	"action": actionImpl{},
+	PluginName: actionImpl{},
 }
 
 type actionImpl struct {
@@ -112,7 +113,10 @@ func (d *driverGRPCServer) Do(ctx context.Context, input *proto.DoInput) (*proto
 	return &proto.DoOutput{Value: out}, nil
 }
 
-const StrPluginAbnormal = "abnormal plugin"
+const (
+	StrPluginAbnormal = "abnormal plugin"
+	PluginName        = "action"
+)
 
 type driverGRPCClient struct {
 	impl proto.DriverClient
