@@ -11,6 +11,10 @@ import (
 	"github.com/plugin-ops/pedestal/pedestal/util"
 )
 
+func clean() {
+	plugin.CleanAllPlugin()
+}
+
 func runCmd() error {
 	if err := checkConfig(); err != nil {
 		return err
@@ -19,8 +23,8 @@ func runCmd() error {
 }
 
 func checkConfig() error {
-	if !util.FileExist(config.ScriptPath) {
-		return errors.New("unknown script address")
+	if !util.FileExist(config.RulePath) {
+		return errors.New("unknown rule address")
 	}
 	return nil
 }
@@ -31,7 +35,7 @@ func runRule() error {
 		return err
 	}
 
-	f, err := ioutil.ReadFile(config.ScriptPath)
+	f, err := ioutil.ReadFile(config.RulePath)
 	if err != nil {
 		return err
 	}

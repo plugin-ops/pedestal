@@ -25,12 +25,14 @@ type Info interface {
 }
 
 type info struct {
-	name    string
-	desc    string
-	author  string
-	version float64
-	content string
-	relyOn  map[string]string
+	name               string
+	desc               string
+	author             string
+	version            float64
+	content            string
+	contentBody        string
+	contentDescription string
+	relyOn             map[string]string
 }
 
 func (g *info) Name() string {
@@ -49,6 +51,14 @@ func (g *info) OriginalContent() string {
 	return g.content
 }
 
+func (g *info) BodyContent() string {
+	return g.contentBody
+}
+
+func (g *info) DescContent() string {
+	return g.contentDescription
+}
+
 func (g *info) Author() string {
 	return g.author
 }
@@ -61,11 +71,11 @@ const (
 	BODY_TAG = "//--body--"
 )
 
-const ( // The pedestal will take the value of the parameter below from the scriptInfo
-	SCRIPT_TAG_NAME        = "script_name"
-	SCRIPT_TAG_RELY_ON     = "script_rely_on" // json format
-	SCRIPT_TAG_VERSION     = "script_version"
-	SCRIPT_TAG_DESCRIPTION = "script_description"
+const ( // The pedestal will take the value of the parameter below from the ruleInfo
+	RULE_TAG_NAME        = "rule_name"
+	RULE_TAG_RELY_ON     = "rule_rely_on" // json format
+	RULE_TAG_VERSION     = "rule_version"
+	RULE_TAG_DESCRIPTION = "rule_description"
 )
 
 func getInfoContent(ruleContent string) string {
@@ -76,6 +86,15 @@ func getInfoContent(ruleContent string) string {
 	return ruleContent[:index]
 }
 
+func getBodyContent(ruleContent string) string {
+	index := strings.Index(ruleContent, BODY_TAG)
+	if index == -1 {
+		return ""
+	}
+	return ruleContent[index+len(BODY_TAG)+1:]
+}
+
 var (
-	ErrNotRuleName = errors.New("unKnown rule name")
+	ErrNotRuleName      = errors.New("unKnown rule name")
+	ErrDependencyFormat = errors.New("dependency format error")
 )

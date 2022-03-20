@@ -3,10 +3,12 @@ package rule
 import (
 	"context"
 	"fmt"
-	"github.com/plugin-ops/pedestal/pedestal/action"
-	"github.com/traefik/yaegi/interp"
 	"reflect"
-	"strings"
+
+	"github.com/plugin-ops/pedestal/pedestal/action"
+
+	"github.com/traefik/yaegi/interp"
+	"github.com/traefik/yaegi/stdlib"
 )
 
 type Golang struct {
@@ -57,56 +59,59 @@ func (g *Golang) Compile() error {
 	if err != nil {
 		return err
 	}
-	g.program, err = g.interpreter.Compile(g.info.content)
+	// TODO 临时添加部分依赖用于测试, 后续应当被删除
+	_ = g.interpreter.Use(stdlib.Symbols)
+	g.program, err = g.interpreter.Compile(g.info.BodyContent())
 	return err
 }
 
 func (g *Golang) parseInfo() (err error) {
 	defer func() {
 		if r := recover(); r != nil {
+			fmt.Println("recover panic:", r)
 			err = fmt.Errorf("malformed definition in the rule description section")
 		}
 	}()
 
-	infoContent := getInfoContent(g.info.OriginalContent())
-	if len(infoContent) == 0 {
+	g.info.contentDescription = getInfoContent(g.info.OriginalContent())
+	if len(g.info.contentDescription) == 0 {
 		return ErrNotRuleName
 	}
-
-	_, err = g.interpreter.Eval(infoContent)
+	g.info.contentBody = getBodyContent(g.info.OriginalContent())
+	_, err = g.interpreter.Eval(g.info.DescContent())
 	if err != nil {
 		return err
 	}
 	{
-		value, err := g.interpreter.Eval(SCRIPT_TAG_NAME)
-		if err != nil {
-			return err
-		}
-		if len(strings.TrimSpace(value.String())) == 0 {
+		value, _ := g.interpreter.Eval(RULE_TAG_NAME)
+		if value.IsValid() {
+			g.info.name = value.String()
+		} else {
 			return ErrNotRuleName
 		}
-		g.info.name = value.String()
 	}
 	{
-		value, err := g.interpreter.Eval(SCRIPT_TAG_DESCRIPTION)
-		if err != nil {
-			return err
+		value, _ := g.interpreter.Eval(RULE_TAG_DESCRIPTION)
+		if value.IsValid() {
+			g.info.desc = value.String()
 		}
-		g.info.desc = value.String()
 	}
 	{
-		value, err := g.interpreter.Eval(SCRIPT_TAG_VERSION)
-		if err != nil {
-			return err
+		value, _ := g.interpreter.Eval(RULE_TAG_VERSION)
+		if value.IsValid() {
+			g.info.version = value.Float()
 		}
-		g.info.version = value.Float()
 	}
 	{
-		value, err := g.interpreter.Eval(SCRIPT_TAG_RELY_ON)
-		if err != nil {
-			return err
+		value, _ := g.interpreter.Eval(RULE_TAG_RELY_ON)
+		if value.IsValid() {
+			relyOn, ok := value.Interface().(map[string]string)
+			if ok {
+				g.info.relyOn = relyOn
+			} else {
+				return ErrDependencyFormat
+			}
 		}
-		g.info.relyOn = value.Interface().(map[string]string)
 	}
 
 	return nil

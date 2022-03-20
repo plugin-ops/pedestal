@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"path"
+	"sync"
 
 	"github.com/plugin-ops/pedestal/pedestal/action"
 	"github.com/plugin-ops/pedestal/pedestal/plugin/proto"
@@ -14,17 +15,34 @@ import (
 )
 
 var (
-	plugins = map[string]plugin.Plugin{}
+	plugins     = []*plugin.Client{}
+	pluginMutex = &sync.Mutex{}
 )
+
+func SetPlugin(p *plugin.Client) {
+	pluginMutex.Lock()
+	plugins = append(plugins, p)
+	pluginMutex.Unlock()
+}
+
+func CleanAllPlugin() {
+	pluginMutex.Lock()
+	for _, client := range plugins {
+		client.Kill()
+	}
+	plugins = []*plugin.Client{}
+	pluginMutex.Unlock()
+}
 
 func AddPlugin(path string) error {
 	client := plugin.NewClient(&plugin.ClientConfig{
-		HandshakeConfig:  handshakeConfig,
-		Plugins:          pluginMap,
-		Cmd:              exec.Command("./plugin/greeter"),
+		HandshakeConfig: handshakeConfig,
+		Plugins: map[string]plugin.Plugin{
+			PluginName: &actionImpl{},
+		},
+		Cmd:              exec.Command(path),
 		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
 	})
-	defer client.Kill()
 	grpcClient, err := client.Client()
 	if err != nil {
 		return err
@@ -34,6 +52,7 @@ func AddPlugin(path string) error {
 	a := raw.(proto.DriverClient)
 
 	action.RegisterAction(&driverGRPCClient{impl: a})
+	SetPlugin(client)
 
 	return nil
 }

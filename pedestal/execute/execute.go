@@ -17,7 +17,7 @@ import (
 
 type CallbackFunc func(r rule.Rule) error
 
-// Executor is used to execute the script, it should not be one-off, and it should be idempotent every time the script is executed
+// Executor is used to execute the rule, it should not be one-off, and it should be idempotent every time the rule is executed
 type Executor interface {
 
 	// Start the executor
@@ -26,33 +26,33 @@ type Executor interface {
 	// Stop the executor
 	Stop() error
 
-	// CheckAction It is used to check whether the script can be executed.
+	// CheckAction It is used to check whether the rule can be executed.
 	//The []string of the return value informs the caller that it cannot be executed due to the lack of dependent actions.
 	//The error is a running error. A simple lack of dependencies will not report an error.
 	CheckAction(r rule.Rule) ([]string, error)
 
-	// Execute A separate thread will immediately execute the script without queuing for the thread pool to become free
-	// Returns the ID of the executed script and execution error
+	// Execute A separate thread will immediately execute the rule without queuing for the thread pool to become free
+	// Returns the ID of the executed rule and execution error
 	Execute(r rule.Rule, callback CallbackFunc) (string, error)
 
-	// Add will add the script to the execution queue for execution
-	// Returns the ID of the executed script and execution error
+	// Add will add the rule to the execution queue for execution
+	// Returns the ID of the executed rule and execution error
 	Add(r rule.Rule, callback CallbackFunc) (string, error)
 
-	// AddScheduledScript A timed script will be added, and the timed script will never be automatically recycled
-	// Returns the ID of the executed script and execution error
-	AddScheduledScript(cron string, r rule.Rule, callback CallbackFunc) (string, error)
+	// AddScheduledRule A timed rule will be added, and the timed rule will never be automatically recycled
+	// Returns the ID of the executed rule and execution error
+	AddScheduledRule(cron string, r rule.Rule, callback CallbackFunc) (string, error)
 
-	// RemoveScript will stop the corresponding script execution plan based on the script id and remove the script from itself
-	RemoveScript(scriptID string) error
+	// RemoveRule will stop the corresponding rule execution plan based on the rule id and remove the rule from itself
+	RemoveRule(ruleID string) error
 
 	// Clean will immediately clean up the garbage
-	// The garbage includes scripts that have been executed
-	// But does not include scripts that are not executed, scripts that are being executed, and scripts that are executed regularly
+	// The garbage includes rules that have been executed
+	// But does not include rules that are not executed, rules that are being executed, and rules that are executed regularly
 	Clean() error
 
-	// GetScript will get the script object saved by itself according to the script id
-	GetScript(id string) rule.Rule
+	// GetRule will get the rule object saved by itself according to the rule id
+	GetRule(id string) rule.Rule
 }
 
 type BuiltInExecutor struct {
@@ -65,7 +65,7 @@ type BuiltInExecutor struct {
 
 	executeQueue *util.StringQueue // element: task id
 	endQueue     *util.StringQueue // element: task id
-	scriptSet    map[string] /*script id*/ *task
+	ruleSet      map[string] /*rule id*/ *task
 
 	mutex *sync.RWMutex
 }
@@ -73,9 +73,10 @@ type BuiltInExecutor struct {
 func NewBuiltInExecutor(configs ...ExecutorConfig) (*BuiltInExecutor, error) {
 	b := &BuiltInExecutor{
 		config:       DefaultExecutorConfig,
+		cronRunner:   cron.New(),
 		executeQueue: util.NewStringQueue(),
 		endQueue:     util.NewStringQueue(),
-		cronRunner:   cron.New(),
+		ruleSet:      map[string]*task{},
 		mutex:        &sync.RWMutex{},
 	}
 	(&b.config).Update(configs...)
@@ -100,7 +101,7 @@ func (b *BuiltInExecutor) run() {
 		}
 
 		id := b.executeQueue.Pull()
-		t := b.scriptSet[id]
+		t := b.ruleSet[id]
 		switch t.taskType {
 		case TaskType_Once:
 			b.addToThreadPool(t)
@@ -160,13 +161,13 @@ func (b *BuiltInExecutor) Execute(r rule.Rule, callback CallbackFunc) (string, e
 		taskType: TaskType_Once,
 		callback: callback,
 	}
-	b.scriptSet[id] = t
+	b.ruleSet[id] = t
 	b.mutex.Unlock()
 	b.execute(t)
 	return id, t.Error
 }
 
-var ErrNotAction = fmt.Errorf("the following actions are not loaded in the pedestal, the script cannot be executed")
+var ErrNotAction = fmt.Errorf("the following actions are not loaded in the pedestal, the rule cannot be executed")
 
 func (b *BuiltInExecutor) execute(t *task) {
 	t.start()
@@ -198,7 +199,7 @@ func (b *BuiltInExecutor) execute(t *task) {
 			}
 		}
 	}
-	{ // do script
+	{ // do rule
 		err := sc.Compile()
 		if err != nil {
 			t.failed(err)
@@ -222,7 +223,7 @@ func (b *BuiltInExecutor) Add(r rule.Rule, callback CallbackFunc) (string, error
 	b.mutex.Lock()
 	b.counter++
 	id := fmt.Sprintf("%v", b.counter)
-	b.scriptSet[id] = &task{
+	b.ruleSet[id] = &task{
 		Rule:     r,
 		taskType: TaskType_Once,
 		status:   TaskStatus_Wait,
@@ -233,11 +234,11 @@ func (b *BuiltInExecutor) Add(r rule.Rule, callback CallbackFunc) (string, error
 	return id, nil
 }
 
-func (b *BuiltInExecutor) AddScheduledScript(cron string, r rule.Rule, callback CallbackFunc) (string, error) {
+func (b *BuiltInExecutor) AddScheduledRule(cron string, r rule.Rule, callback CallbackFunc) (string, error) {
 	b.mutex.Lock()
 	b.counter++
 	id := fmt.Sprintf("%v", b.counter)
-	b.scriptSet[id] = &task{
+	b.ruleSet[id] = &task{
 		Rule:     r,
 		cron:     cron,
 		taskType: TaskType_Cycle,
@@ -249,9 +250,9 @@ func (b *BuiltInExecutor) AddScheduledScript(cron string, r rule.Rule, callback 
 	return id, nil
 }
 
-func (b *BuiltInExecutor) RemoveScript(scriptID string) error {
+func (b *BuiltInExecutor) RemoveRule(ruleID string) error {
 	b.mutex.Lock()
-	delete(b.scriptSet, scriptID)
+	delete(b.ruleSet, ruleID)
 	b.mutex.Unlock()
 	return nil
 }
@@ -260,17 +261,17 @@ func (b *BuiltInExecutor) Clean() error {
 	b.mutex.Lock()
 	size := b.endQueue.Size()
 	for i := 0; i < size; i++ {
-		delete(b.scriptSet, b.endQueue.Pull())
+		delete(b.ruleSet, b.endQueue.Pull())
 	}
 	b.mutex.Unlock()
 
 	return nil
 }
 
-func (b *BuiltInExecutor) GetScript(id string) rule.Rule {
+func (b *BuiltInExecutor) GetRule(id string) rule.Rule {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
-	return b.scriptSet[id].Rule
+	return b.ruleSet[id].Rule
 }
 
 type task struct {
@@ -328,11 +329,11 @@ type ExecutorConfig struct {
 	// MaxPoolSize unlimited by default
 	MaxPoolSize int64
 
-	// AutoCleanScriptQuantity in second, unlimited by default
+	// AutoCleanRuleQuantity in second, unlimited by default
 	AutoCleanInterval int64
 
-	// AutoCleanScriptQuantity unlimited by default
-	AutoCleanScriptQuantity int64
+	// AutoCleanRuleQuantity unlimited by default
+	AutoCleanRuleQuantity int64
 }
 
 func (e *ExecutorConfig) Update(config ...ExecutorConfig) {
@@ -343,15 +344,15 @@ func (e *ExecutorConfig) Update(config ...ExecutorConfig) {
 		if executorConfig.AutoCleanInterval > 0 {
 			e.AutoCleanInterval = executorConfig.AutoCleanInterval
 		}
-		if executorConfig.AutoCleanScriptQuantity > 0 {
-			e.AutoCleanScriptQuantity = executorConfig.AutoCleanScriptQuantity
+		if executorConfig.AutoCleanRuleQuantity > 0 {
+			e.AutoCleanRuleQuantity = executorConfig.AutoCleanRuleQuantity
 		}
 	}
 }
 
 var DefaultExecutorConfig = ExecutorConfig{
-	Ctx:                     context.TODO(),
-	MaxPoolSize:             int64(runtime.NumCPU()),
-	AutoCleanInterval:       0,
-	AutoCleanScriptQuantity: 0,
+	Ctx:                   context.TODO(),
+	MaxPoolSize:           int64(runtime.NumCPU()),
+	AutoCleanInterval:     0,
+	AutoCleanRuleQuantity: 0,
 }
