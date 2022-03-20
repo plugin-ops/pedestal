@@ -4,6 +4,7 @@ type Action interface {
 	Name() string
 	Do(params ...*Value) ([]*Value, error)
 	Version() float32
+	Description() string
 }
 
 func ConvertActionToFunc(a Action) func(...interface{}) ([]interface{}, error) {

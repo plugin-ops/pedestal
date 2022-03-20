@@ -113,6 +113,11 @@ func (d *driverGRPCServer) Do(ctx context.Context, input *proto.DoInput) (*proto
 	return &proto.DoOutput{Value: out}, nil
 }
 
+func (d *driverGRPCServer) Description(ctx context.Context, empty *proto.Empty) (*proto.String, error) {
+	desc := d.impl.Description()
+	return &proto.String{Value: desc}, nil
+}
+
 const (
 	StrPluginAbnormal = "abnormal plugin"
 	PluginName        = "action"
@@ -153,4 +158,12 @@ func (d *driverGRPCClient) Version() float32 {
 		return -1
 	}
 	return version.GetValue()
+}
+
+func (d *driverGRPCClient) Description() string {
+	desc, err := d.impl.Description(context.TODO(), &proto.Empty{})
+	if err != nil {
+		return StrPluginAbnormal
+	}
+	return desc.GetValue()
 }

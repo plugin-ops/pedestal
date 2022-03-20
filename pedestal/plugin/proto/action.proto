@@ -4,6 +4,7 @@ option go_package = "./;proto";
 
 service Driver {
   rpc Name(Empty) returns (String);
+  rpc Description(Empty) returns (String);
   rpc Version(Empty) returns (Float32);
   rpc Do(DoInput) returns (DoOutput);
 }
