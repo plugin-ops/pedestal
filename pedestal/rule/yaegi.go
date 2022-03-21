@@ -22,6 +22,8 @@ func NewGolang(content string) (*Golang, error) {
 	g := &Golang{
 		info: &info{
 			content: content,
+			relyOn:  map[string]string{},
+			params:  map[string]interface{}{},
 		},
 		interpreter: interp.New(interp.Options{}),
 		relyOn:      map[string]reflect.Value{},
@@ -37,7 +39,12 @@ func (g *Golang) Info() Info {
 	return g.info
 }
 
-func (g *Golang) Set(recipient string, dependency action.Action) error {
+func (g *Golang) Set(recipient string, value *action.Value) error {
+	g.info.params[recipient] = value.Interface()
+	return nil
+}
+
+func (g *Golang) AddRelyOn(recipient string, dependency action.Action) error {
 	g.relyOn[recipient] = reflect.ValueOf(action.ConvertActionToFunc(dependency))
 	return nil
 }
@@ -53,8 +60,16 @@ func (g *Golang) Do(ctx context.Context) error {
 }
 
 func (g *Golang) Compile() error {
+	if g.program != nil {
+		return nil
+	}
+	params := map[string]reflect.Value{}
+	for k, v := range g.info.GetParams() {
+		params[k] = reflect.ValueOf(v)
+	}
 	err := g.interpreter.Use(map[string]map[string]reflect.Value{
 		"action/action": g.relyOn,
+		"value/value":   params,
 	})
 	if err != nil {
 		return err
@@ -108,6 +123,17 @@ func (g *Golang) parseInfo() (err error) {
 			relyOn, ok := value.Interface().(map[string]string)
 			if ok {
 				g.info.relyOn = relyOn
+			} else {
+				return ErrDependencyFormat
+			}
+		}
+	}
+	{
+		value, _ := g.interpreter.Eval(RULE_TAG_PARAMS)
+		if value.IsValid() {
+			relyOn, ok := value.Interface().(map[string]interface{})
+			if ok {
+				g.info.params = relyOn
 			} else {
 				return ErrDependencyFormat
 			}

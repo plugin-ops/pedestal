@@ -33,15 +33,15 @@ type Executor interface {
 
 	// Execute A separate thread will immediately execute the rule without queuing for the thread pool to become free
 	// Returns the ID of the executed rule and execution error
-	Execute(r rule.Rule, callback CallbackFunc) (string, error)
+	Execute(r rule.Rule, params map[string]interface{}, callback CallbackFunc) (string, error)
 
 	// Add will add the rule to the execution queue for execution
 	// Returns the ID of the executed rule and execution error
-	Add(r rule.Rule, callback CallbackFunc) (string, error)
+	Add(r rule.Rule, params map[string]interface{}, callback CallbackFunc) (string, error)
 
 	// AddScheduledRule A timed rule will be added, and the timed rule will never be automatically recycled
 	// Returns the ID of the executed rule and execution error
-	AddScheduledRule(cron string, r rule.Rule, callback CallbackFunc) (string, error)
+	AddScheduledRule(cron string, r rule.Rule, params map[string]interface{}, callback CallbackFunc) (string, error)
 
 	// RemoveRule will stop the corresponding rule execution plan based on the rule id and remove the rule from itself
 	RemoveRule(ruleID string) error
@@ -151,7 +151,7 @@ func (b *BuiltInExecutor) CheckAction(r rule.Rule) ([]string, error) {
 	return notExist, nil
 }
 
-func (b *BuiltInExecutor) Execute(r rule.Rule, callback CallbackFunc) (string, error) {
+func (b *BuiltInExecutor) Execute(r rule.Rule, params map[string]interface{}, callback CallbackFunc) (string, error) {
 	b.mutex.Lock()
 	b.counter++
 	id := fmt.Sprintf("%v", b.counter)
@@ -160,6 +160,7 @@ func (b *BuiltInExecutor) Execute(r rule.Rule, callback CallbackFunc) (string, e
 		status:   TaskStatus_Wait,
 		taskType: TaskType_Once,
 		callback: callback,
+		params:   params,
 	}
 	b.ruleSet[id] = t
 	b.mutex.Unlock()
@@ -192,7 +193,16 @@ func (b *BuiltInExecutor) execute(t *task) {
 				t.failed(ErrNotAction)
 				return
 			}
-			err := sc.Set(r, a)
+			err := sc.AddRelyOn(r, a)
+			if err != nil {
+				t.failed(err)
+				return
+			}
+		}
+	}
+	{ // add params
+		for k, v := range t.params {
+			err := sc.Set(k, action.NewValue(v))
 			if err != nil {
 				t.failed(err)
 				return
@@ -219,7 +229,7 @@ func (b *BuiltInExecutor) execute(t *task) {
 	t.over()
 }
 
-func (b *BuiltInExecutor) Add(r rule.Rule, callback CallbackFunc) (string, error) {
+func (b *BuiltInExecutor) Add(r rule.Rule, params map[string]interface{}, callback CallbackFunc) (string, error) {
 	b.mutex.Lock()
 	b.counter++
 	id := fmt.Sprintf("%v", b.counter)
@@ -228,13 +238,14 @@ func (b *BuiltInExecutor) Add(r rule.Rule, callback CallbackFunc) (string, error
 		taskType: TaskType_Once,
 		status:   TaskStatus_Wait,
 		callback: callback,
+		params:   params,
 	}
 	b.executeQueue.Push(id)
 	b.mutex.Unlock()
 	return id, nil
 }
 
-func (b *BuiltInExecutor) AddScheduledRule(cron string, r rule.Rule, callback CallbackFunc) (string, error) {
+func (b *BuiltInExecutor) AddScheduledRule(cron string, r rule.Rule, params map[string]interface{}, callback CallbackFunc) (string, error) {
 	b.mutex.Lock()
 	b.counter++
 	id := fmt.Sprintf("%v", b.counter)
@@ -244,6 +255,7 @@ func (b *BuiltInExecutor) AddScheduledRule(cron string, r rule.Rule, callback Ca
 		taskType: TaskType_Cycle,
 		status:   TaskStatus_Wait,
 		callback: callback,
+		params:   params,
 	}
 	b.executeQueue.Push(id)
 	b.mutex.Unlock()
@@ -282,6 +294,7 @@ type task struct {
 	status      TaskStatus
 	taskType    TaskType
 	callback    CallbackFunc
+	params      map[string]interface{}
 	runningTime time.Time
 	endTime     time.Time
 

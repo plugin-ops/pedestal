@@ -26,6 +26,19 @@ func (v *Value) String() string {
 	return fmt.Sprintf("%v", v.v.Interface())
 }
 
+func (v *Value) Value() reflect.Value {
+	return v.v
+}
+
+func (v *Value) Kind() reflect.Kind {
+	return v.k
+}
+
+func (v *Value) IsNil() bool {
+	// TODO 应该根据kind判断
+	return !v.v.IsValid()
+}
+
 func ConvertSliceToValueSlice(i ...interface{}) []*Value {
 	vs := make([]*Value, len(i))
 	for index, value := range i {
