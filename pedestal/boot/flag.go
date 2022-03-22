@@ -2,9 +2,9 @@ package boot
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/plugin-ops/pedestal/pedestal/config"
+	"github.com/plugin-ops/pedestal/pedestal/execute"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -27,8 +27,7 @@ func Run() {
 		},
 	}
 
-	rootCmd.Flags().StringVarP(&config.PluginDir, "plugin-dir", "p", "./plugin", "Plugin storage directory, there should be a src directory in this directory, and all plugins are placed in the src directory")
-	rootCmd.Flags().StringVarP(&config.RulePath, "rule-path", "r", "", "Script file address, the plugin will execute this rule")
+	registerFlag(rootCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println("plugin-ops abnormal termination:", err)
@@ -36,7 +35,26 @@ func Run() {
 	}
 }
 
+func registerFlag(c *cobra.Command) {
+	c.Flags().StringVarP(&config.PluginDir, "plugin-dir", "p", "./plugin", "Plugin storage directory, there should be a src directory in this directory, and all plugins are placed in the src directory")
+	c.Flags().StringVarP(&config.RulePath, "rule-path", "r", "", "Script file address, the plugin will execute this rule")
+	c.Flags().BoolVarP(&config.EnableHttpServer, "enable-http-server", "s", false, "enable http server")
+}
+
 func run(cmd *cobra.Command, _ []string) error {
 	defer clean()
-	return runCmd()
+
+	err := execute.InitExecute()
+	if err != nil {
+		return err
+	}
+
+	errChan := make(chan error)
+	if config.EnableHttpServer {
+		go func() {
+			errChan <- startHttpServer()
+		}()
+	}
+
+	return <-errChan
 }

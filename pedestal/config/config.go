@@ -9,7 +9,8 @@ var ( // When used as a command line tool
 )
 
 var ( // When used as a http server
-	HttpPort      = 8888
-	HttpIP        = "0.0.0.0"
-	EnableSwagger bool
+	HttpPort         = 8888
+	HttpIP           = "0.0.0.0"
+	EnableSwagger    bool
+	EnableHttpServer bool
 )

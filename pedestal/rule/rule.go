@@ -108,3 +108,9 @@ var (
 )
 
 type RuleConfig map[string]interface{}
+
+type RuleType string
+
+const (
+	RuleTypeGo = "go"
+)

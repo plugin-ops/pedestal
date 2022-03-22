@@ -49,6 +49,6 @@ func runRule() error {
 		return err
 	}
 
-	_, err = exec.Execute(r, nil)
+	_, err = exec.Execute(r, nil, nil)
 	return err
 }

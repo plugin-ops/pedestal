@@ -55,6 +55,27 @@ type Executor interface {
 	GetRule(id string) rule.Rule
 }
 
+var (
+	std      Executor
+	stdMutex = &sync.RWMutex{}
+)
+
+func InitExecute() (err error) {
+	stdMutex.Lock()
+	defer stdMutex.Unlock()
+	std, err = NewBuiltInExecutor()
+	if err != nil {
+		return err
+	}
+	return std.Start()
+}
+
+func GetExecutor() Executor {
+	stdMutex.RLock()
+	defer stdMutex.RUnlock()
+	return std
+}
+
 type BuiltInExecutor struct {
 	config ExecutorConfig
 
