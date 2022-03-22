@@ -15,13 +15,13 @@ import (
 )
 
 var (
-	plugins     = []*plugin.Client{}
+	plugins     = map[string]*plugin.Client{}
 	pluginMutex = &sync.Mutex{}
 )
 
-func SetPlugin(p *plugin.Client) {
+func SetPlugin(actionName string, p *plugin.Client) {
 	pluginMutex.Lock()
-	plugins = append(plugins, p)
+	plugins[actionName] = p
 	pluginMutex.Unlock()
 }
 
@@ -30,7 +30,15 @@ func CleanAllPlugin() {
 	for _, client := range plugins {
 		client.Kill()
 	}
-	plugins = []*plugin.Client{}
+	plugins = map[string]*plugin.Client{}
+	pluginMutex.Unlock()
+}
+
+func RemovePlugin(actionName string) {
+	pluginMutex.Lock()
+	action.RemoveAction(actionName)
+	plugins[actionName].Kill()
+	delete(plugins, actionName)
 	pluginMutex.Unlock()
 }
 
@@ -49,10 +57,11 @@ func AddPlugin(path string) error {
 	}
 	raw, err := grpcClient.Dispense(PluginName)
 	// srv can only be proto.DriverClient
-	a := raw.(proto.DriverClient)
+	c := raw.(proto.DriverClient)
 
-	action.RegisterAction(&driverGRPCClient{impl: a})
-	SetPlugin(client)
+	a := &driverGRPCClient{impl: c}
+	action.RegisterAction(a)
+	SetPlugin(a.Name(), client)
 
 	return nil
 }

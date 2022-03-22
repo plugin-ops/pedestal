@@ -32,6 +32,13 @@ func CleanAllAction() {
 	runtime.GC()
 }
 
+func RemoveAction(name string) {
+	as.mutex.Lock()
+	delete(as.set, name)
+	as.mutex.Unlock()
+	runtime.GC()
+}
+
 func GetAction(name string) Action {
 	as.mutex.RLock()
 	defer as.mutex.RUnlock()
