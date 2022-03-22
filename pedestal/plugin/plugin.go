@@ -2,9 +2,13 @@ package plugin
 
 import (
 	"context"
+	"fmt"
+	"github.com/plugin-ops/pedestal/pedestal/config"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"sync"
 
 	"github.com/plugin-ops/pedestal/pedestal/action"
@@ -15,13 +19,19 @@ import (
 )
 
 var (
-	plugins     = map[string]*plugin.Client{}
+	plugins     = map[string] /*action name*/ *plugin.Client{}
+	pluginFile  = map[string] /*action name*/ string /*file name*/ {}
 	pluginMutex = &sync.Mutex{}
 )
 
-func SetPlugin(actionName string, p *plugin.Client) {
+func SetPlugin(actionName, pluginPath string, p *plugin.Client) {
 	pluginMutex.Lock()
+	a, ok := plugins[actionName]
+	if ok {
+		a.Kill()
+	}
 	plugins[actionName] = p
+	pluginFile[actionName] = pluginPath
 	pluginMutex.Unlock()
 }
 
@@ -31,6 +41,7 @@ func CleanAllPlugin() {
 		client.Kill()
 	}
 	plugins = map[string]*plugin.Client{}
+	pluginFile = map[string]string{}
 	pluginMutex.Unlock()
 }
 
@@ -39,6 +50,7 @@ func RemovePlugin(actionName string) {
 	action.RemoveAction(actionName)
 	plugins[actionName].Kill()
 	delete(plugins, actionName)
+	delete(pluginFile, actionName)
 	pluginMutex.Unlock()
 }
 
@@ -61,7 +73,7 @@ func AddPlugin(path string) error {
 
 	a := &driverGRPCClient{impl: c}
 	action.RegisterAction(a)
-	SetPlugin(a.Name(), client)
+	SetPlugin(a.Name(), path, client)
 
 	return nil
 }
@@ -83,6 +95,38 @@ func AddPluginWithDir(dir string) error {
 func ReLoadPluginWithDir(dir string) error {
 	action.CleanAllAction()
 	return AddPluginWithDir(dir)
+}
+
+func CleanUselessPluginFile() error {
+	files, err := ioutil.ReadDir(config.PluginDir)
+	if err != nil {
+		return err
+	}
+
+	errStrs := []string{}
+
+	pluginMutex.Lock()
+	for _, file := range files {
+		has := false
+		for _, f := range pluginFile {
+			if path.Join(config.PluginDir, file.Name()) == f {
+				has = true
+				break
+			}
+		}
+		if !has {
+			err := os.RemoveAll(path.Join(config.PluginDir, file.Name()))
+			if err != nil {
+				errStrs = append(errStrs, err.Error())
+			}
+		}
+	}
+	pluginMutex.Unlock()
+
+	if len(errStrs) > 0 {
+		return fmt.Errorf("remove useless plugin file( %v ) faile.", strings.Join(errStrs, ", "))
+	}
+	return nil
 }
 
 var handshakeConfig = plugin.HandshakeConfig{

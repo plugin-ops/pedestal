@@ -7,14 +7,47 @@ import (
 	"github.com/plugin-ops/pedestal/pedestal/execute"
 	"github.com/plugin-ops/pedestal/pedestal/plugin"
 	"github.com/plugin-ops/pedestal/pedestal/rule"
+	"path"
 )
 
 var V1Api = &v1{}
 
 type v1 struct{}
 
-func (v *v1) ReloadAllPlugins(r *ghttp.Request) {
+func (*v1) ReloadAllPlugins(r *ghttp.Request) {
 	err := plugin.ReLoadPluginWithDir(config.PluginDir)
+	SendResponseExit(r, NewBaseReq(err))
+}
+
+type RemovePluginReqV1 struct {
+	ActionName string `json:"action_name"`
+}
+
+func (*v1) RemovePlugin(r *ghttp.Request) {
+	req := new(RemovePluginReqV1)
+	BindRequestParams(r, req)
+
+	plugin.RemovePlugin(req.ActionName)
+	SendResponseExit(r, NewBaseReq(nil))
+}
+
+type AddPluginReqV1 struct {
+	PluginFile *ghttp.UploadFile
+}
+
+func (*v1) AddPlugin(r *ghttp.Request) {
+	req := new(AddPluginReqV1)
+	BindRequestParams(r, req)
+
+	name, err := req.PluginFile.Save(config.PluginDir, true)
+	if err != nil {
+		SendResponseExit(r, NewBaseReq(err))
+	}
+	err = plugin.AddPlugin(path.Join(config.PluginDir, name))
+	if err != nil {
+		SendResponseExit(r, NewBaseReq(err))
+	}
+	err = plugin.CleanUselessPluginFile()
 	SendResponseExit(r, NewBaseReq(err))
 }
 
@@ -34,14 +67,12 @@ type RunRuleResV1 struct {
 	TaskID string `json:"task_id"`
 }
 
-func (v *v1) RunRule(r *ghttp.Request) {
+func (*v1) RunRule(r *ghttp.Request) {
 	req := new(RunRuleReqV1)
-	err := r.Parse(req)
-	if err != nil {
-		SendResponseExit(r, NewBaseReq(err))
-	}
+	BindRequestParams(r, req)
 
 	var ru rule.Rule
+	var err error
 	switch rule.RuleType(req.RuleType) {
 	case rule.RuleTypeGo:
 		ru, err = rule.NewGolang(req.RuleContent)

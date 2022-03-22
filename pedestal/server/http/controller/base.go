@@ -27,3 +27,11 @@ func SendResponseExit(r *ghttp.Request, resp interface{}) {
 		_ = r.Response.WriteJsonExit(NewBaseReq(err))
 	}
 }
+
+// BindRequestParams failure will return an error directly to the interface
+func BindRequestParams(r *ghttp.Request, pointer interface{}) {
+	err := r.Parse(pointer)
+	if err != nil {
+		SendResponseExit(r, NewBaseReq(err))
+	}
+}

@@ -28,7 +28,9 @@ func StartHttpServer() error {
 
 func registerRouter(s *ghttp.Server) {
 	s.Group("/v1", func(group *ghttp.RouterGroup) {
-		group.POST("plugins/all/reload", controller.V1Api.ReloadAllPlugins)
-		group.POST("plugins/run", controller.V1Api.RunRule)
+		group.POST("plugin/all/reload", controller.V1Api.ReloadAllPlugins)
+		group.POST("plugin/remove", controller.V1Api.RemovePlugin)
+
+		group.POST("rule/run", controller.V1Api.RunRule)
 	})
 }
