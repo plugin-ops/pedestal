@@ -3,6 +3,7 @@ package action
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 )
 
 type Value struct {
@@ -11,6 +12,9 @@ type Value struct {
 }
 
 func NewValue(v interface{}) *Value {
+	if _, ok := v.(*Value); ok {
+		return v.(*Value)
+	}
 	value := &Value{
 		v: reflect.ValueOf(v),
 	}
@@ -24,6 +28,18 @@ func (v *Value) Interface() interface{} {
 
 func (v *Value) String() string {
 	return fmt.Sprintf("%v", v.v.Interface())
+}
+
+func (v *Value) Float64() float64 {
+	f, _ := strconv.ParseFloat(v.String(), 10)
+	return f
+}
+
+func (v *Value) Bool() bool {
+	if v.Kind() == reflect.Bool {
+		return v.v.Bool()
+	}
+	return false
 }
 
 func (v *Value) Value() reflect.Value {

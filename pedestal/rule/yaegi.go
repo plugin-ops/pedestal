@@ -40,7 +40,7 @@ func (g *Golang) Info() Info {
 }
 
 func (g *Golang) Set(recipient string, value *action.Value) error {
-	g.info.params[recipient] = value.Interface()
+	g.info.params[recipient] = value
 	return nil
 }
 
@@ -63,7 +63,12 @@ func (g *Golang) Compile() error {
 	if g.program != nil {
 		return nil
 	}
-	params := map[string]reflect.Value{}
+	params := map[string]reflect.Value{
+		"Value":                    reflect.ValueOf((*action.Value)(nil)),
+		"NewValue":                 reflect.ValueOf(action.NewValue),
+		"ConvertSliceToValueSlice": reflect.ValueOf(action.ConvertSliceToValueSlice),
+		"ConvertValueSliceToSlice": reflect.ValueOf(action.ConvertValueSliceToSlice),
+	}
 	for k, v := range g.info.GetParams() {
 		params[k] = reflect.ValueOf(v)
 	}
