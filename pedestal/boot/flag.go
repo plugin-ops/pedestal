@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/plugin-ops/pedestal/pedestal/config"
 	"github.com/plugin-ops/pedestal/pedestal/execute"
+	"github.com/plugin-ops/pedestal/pedestal/plugin"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -41,10 +42,15 @@ func registerFlag(c *cobra.Command) {
 	c.Flags().BoolVarP(&config.EnableHttpServer, "enable-http-server", "s", false, "enable http server")
 }
 
-func run(cmd *cobra.Command, _ []string) error {
+func run(cmd *cobra.Command, _ []string) (err error) {
 	defer clean()
 
-	err := execute.InitExecute()
+	err = plugin.ReLoadPluginWithDir(config.PluginDir)
+	if err != nil {
+		return err
+	}
+
+	err = execute.InitExecute()
 	if err != nil {
 		return err
 	}

@@ -19,6 +19,16 @@ func NewActionSet() *actionSet {
 
 var as = NewActionSet()
 
+func ListActionName() []string {
+	names := []string{}
+	as.mutex.RLock()
+	for n := range as.set {
+		names = append(names, n)
+	}
+	as.mutex.RUnlock()
+	return names
+}
+
 func RegisterAction(a Action) {
 	as.mutex.Lock()
 	as.set[a.Name()] = a

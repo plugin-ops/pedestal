@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/plugin-ops/pedestal/pedestal/action"
 	"github.com/plugin-ops/pedestal/pedestal/config"
 	"github.com/plugin-ops/pedestal/pedestal/execute"
 	"github.com/plugin-ops/pedestal/pedestal/plugin"
@@ -92,4 +93,34 @@ func (*v1) RunRule(r *ghttp.Request) {
 		BaseRes: NewBaseReq(err),
 		TaskID:  id,
 	})
+}
+
+type ListActionResV1 struct {
+	BaseRes
+	Actions []*ActionResV1 `json:"actions"`
+	Total   int            `json:"total"`
+}
+
+type ActionResV1 struct {
+	Name        string  `json:"name"`
+	Version     float32 `json:"version"`
+	Description string  `json:"description"`
+}
+
+func (*v1) ListAction(r *ghttp.Request) {
+	actions := action.ListActionName()
+	res := &ListActionResV1{
+		BaseRes: NewBaseReq(nil),
+		Actions: []*ActionResV1{},
+		Total:   len(actions),
+	}
+	for _, s := range actions {
+		a := action.GetAction(s)
+		res.Actions = append(res.Actions, &ActionResV1{
+			Name:        s,
+			Version:     a.Version(),
+			Description: a.Description(),
+		})
+	}
+	SendResponseExit(r, res)
 }
