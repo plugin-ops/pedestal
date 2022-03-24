@@ -22,6 +22,7 @@ type Info interface {
 	Version() float64
 	OriginalContent() string
 	Author() string
+	RuleType() RuleType
 	GetRelyOn() map[string]string      // map[dependency]recipient
 	GetParams() map[string]interface{} // the dynamic parameters and default values that the rule can accept are recorded here
 }
@@ -30,6 +31,7 @@ type info struct {
 	name               string
 	desc               string
 	author             string
+	ruleType           RuleType
 	version            float64
 	content            string
 	contentBody        string
@@ -64,6 +66,10 @@ func (g *info) DescContent() string {
 
 func (g *info) Author() string {
 	return g.author
+}
+
+func (g *info) RuleType() RuleType {
+	return g.ruleType
 }
 
 func (g *info) GetRelyOn() map[string]string {

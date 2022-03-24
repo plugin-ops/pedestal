@@ -52,10 +52,33 @@ func (*v1) AddPlugin(r *ghttp.Request) {
 	SendResponseExit(r, NewBaseReq(err))
 }
 
+type AddRuleReqV1 struct {
+	RuleContent string `json:"rule_content"`
+	RuleType    string `json:"rule_type" enum:"go"`
+}
+
+func (*v1) AddRule(r *ghttp.Request) {
+	req := new(AddRuleReqV1)
+	BindRequestParams(r, req)
+
+	var ru rule.Rule
+	var err error
+	switch rule.RuleType(req.RuleType) {
+	case rule.RuleTypeGo:
+		ru, err = rule.NewGolang(req.RuleContent)
+	default:
+		err = errors.New("known rule type")
+	}
+	if err != nil {
+		SendResponseExit(r, NewBaseReq(err))
+	}
+	rule.SetRule(ru)
+	SendResponseExit(r, NewBaseReq(nil))
+}
+
 type RunRuleReqV1 struct {
-	RuleContent string     `json:"rule_content"`
-	RuleType    string     `json:"rule_type" enum:"go"`
-	RunParams   []*KVReqV1 `json:"run_params"`
+	RuleName  string     `json:"rule_name"`
+	RunParams []*KVReqV1 `json:"run_params"`
 }
 
 type KVReqV1 struct {
@@ -72,14 +95,7 @@ func (*v1) RunRule(r *ghttp.Request) {
 	req := new(RunRuleReqV1)
 	BindRequestParams(r, req)
 
-	var ru rule.Rule
-	var err error
-	switch rule.RuleType(req.RuleType) {
-	case rule.RuleTypeGo:
-		ru, err = rule.NewGolang(req.RuleContent)
-	default:
-		err = errors.New("known rule type")
-	}
+	ru, err := rule.GetRule(req.RuleName)
 	if err != nil {
 		SendResponseExit(r, NewBaseReq(err))
 	}

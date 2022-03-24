@@ -196,15 +196,21 @@ const (
 )
 
 type driverGRPCClient struct {
-	impl proto.DriverClient
+	impl    proto.DriverClient
+	name    string
+	version float32
+	desc    string
 }
 
 func (d *driverGRPCClient) Name() string {
-	name, err := d.impl.Name(context.TODO(), &proto.Empty{})
-	if err != nil {
-		return StrPluginAbnormal
+	if d.name == "" {
+		name, err := d.impl.Name(context.TODO(), &proto.Empty{})
+		if err != nil {
+			return StrPluginAbnormal
+		}
+		d.name = name.GetValue()
 	}
-	return name.GetValue()
+	return d.name
 }
 
 func (d *driverGRPCClient) Do(params ...*action.Value) ([]*action.Value, error) {
@@ -225,17 +231,23 @@ func (d *driverGRPCClient) Do(params ...*action.Value) ([]*action.Value, error) 
 }
 
 func (d *driverGRPCClient) Version() float32 {
-	version, err := d.impl.Version(context.TODO(), &proto.Empty{})
-	if err != nil {
-		return -1
+	if d.version == 0 {
+		version, err := d.impl.Version(context.TODO(), &proto.Empty{})
+		if err != nil {
+			return -1
+		}
+		d.version = version.GetValue()
 	}
-	return version.GetValue()
+	return d.version
 }
 
 func (d *driverGRPCClient) Description() string {
-	desc, err := d.impl.Description(context.TODO(), &proto.Empty{})
-	if err != nil {
-		return StrPluginAbnormal
+	if d.desc == "" {
+		desc, err := d.impl.Description(context.TODO(), &proto.Empty{})
+		if err != nil {
+			return StrPluginAbnormal
+		}
+		d.desc = desc.GetValue()
 	}
-	return desc.GetValue()
+	return d.desc
 }

@@ -21,9 +21,10 @@ type Golang struct {
 func NewGolang(content string) (*Golang, error) {
 	g := &Golang{
 		info: &info{
-			content: content,
-			relyOn:  map[string]string{},
-			params:  map[string]interface{}{},
+			content:  content,
+			ruleType: RuleTypeGo,
+			relyOn:   map[string]string{},
+			params:   map[string]interface{}{},
 		},
 		interpreter: interp.New(interp.Options{}),
 		relyOn:      map[string]reflect.Value{},
