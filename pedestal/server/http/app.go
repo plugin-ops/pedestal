@@ -35,5 +35,6 @@ func registerRouter(s *ghttp.Server) {
 		group.GET("action/list", controller.V1Api.ListAction)
 
 		group.POST("rule/run", controller.V1Api.RunRule)
+		group.POST("rule/add", controller.V1Api.AddRule)
 	})
 }
