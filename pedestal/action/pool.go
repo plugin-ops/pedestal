@@ -20,7 +20,7 @@ func ListActionName(entry *logrus.Entry) []string {
 	poolMutex.RLock()
 	for _, s := range pool {
 		for _, action := range s {
-			names = append(names, fmt.Sprintf("%v@%v", action.Name(), action.Version()))
+			names = append(names, GenerateActionKey(action))
 		}
 	}
 	poolMutex.RUnlock()
@@ -29,13 +29,13 @@ func ListActionName(entry *logrus.Entry) []string {
 }
 
 func RegisterAction(entry *logrus.Entry, a Action) {
-	entry.Infof("registry action: %v@%v\n", a.Name(), a.Version())
+	entry.Infof("registry action: %v\n", GenerateActionKey(a))
 	poolMutex.Lock()
 	if _, ok := pool[a.Name()]; !ok {
 		pool[a.Name()] = map[float32]Action{}
 	}
 	if _, ok := pool[a.Name()][a.Version()]; ok {
-		entry.Infof("action %v@%v already exists，will be overwritten\n", a.Name(), a.Version())
+		entry.Infof("action %v already exists，will be overwritten\n", GenerateActionKey(a))
 	}
 	pool[a.Name()][a.Version()] = a
 	poolMutex.Unlock()
@@ -94,10 +94,10 @@ func GetAction(entry *logrus.Entry, name string, version float32) (a Action, exi
 	}
 
 	if a == nil {
-		entry.Warnf("get action %v@%v failed, because not exist\n", name, version)
+		entry.Warnf("get action %v%v failed, because not exist\n", name, version)
 		return a, false
 	}
-	entry.Infof("get action %v@%v", a.Name(), a.Version())
+	entry.Infof("get action %v", GenerateActionKey(a))
 	return a, true
 }
 
