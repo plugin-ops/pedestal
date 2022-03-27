@@ -51,8 +51,15 @@ func (v *Value) Kind() reflect.Kind {
 }
 
 func (v *Value) IsNil() bool {
-	// TODO 应该根据kind判断
-	return !v.v.IsValid()
+	if !v.v.IsValid() {
+		return true
+	}
+	switch v.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Map, reflect.Ptr, reflect.UnsafePointer, reflect.Interface, reflect.Slice:
+		return v.v.IsNil()
+	default:
+		return false
+	}
 }
 
 func ConvertSliceToValueSlice(i ...interface{}) []*Value {
@@ -63,8 +70,8 @@ func ConvertSliceToValueSlice(i ...interface{}) []*Value {
 	return vs
 }
 
-func ConvertValueSliceToSlice(v ...*Value) []interface{} {
-	is := make([]interface{}, len(v))
+func ConvertValueSliceToSlice(v map[string]*Value) map[string]interface{} {
+	is := map[string]interface{}{}
 	for i, value := range v {
 		is[i] = value.Interface()
 	}
