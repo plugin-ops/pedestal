@@ -3,9 +3,11 @@ module github.com/plugin-ops/pedestal
 go 1.17
 
 require (
+	github.com/gogf/gf/v2 v2.0.4
 	github.com/hashicorp/go-plugin v1.4.3
 	github.com/sirupsen/logrus v1.8.1
 	github.com/swaggo/swag v1.8.0
+	github.com/traefik/yaegi v0.11.2
 	github.com/urfave/cli/v2 v2.4.0
 	google.golang.org/grpc v1.27.1
 	google.golang.org/protobuf v1.26.0
@@ -30,7 +32,6 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-redis/redis/v8 v8.11.4 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/gogf/gf/v2 v2.0.4 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/grokify/html-strip-tags-go v0.0.1 // indirect
@@ -50,7 +51,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/traefik/yaegi v0.11.2 // indirect
 	go.opentelemetry.io/otel v1.0.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.0.0 // indirect
 	go.opentelemetry.io/otel/trace v1.0.0 // indirect
