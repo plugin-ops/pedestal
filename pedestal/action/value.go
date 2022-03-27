@@ -1,7 +1,6 @@
 package action
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 )
@@ -23,11 +22,17 @@ func NewValue(v interface{}) *Value {
 }
 
 func (v *Value) Interface() interface{} {
+	if v.IsNil() {
+		return nil
+	}
 	return v.v.Interface()
 }
 
 func (v *Value) String() string {
-	return fmt.Sprintf("%v", v.v.Interface())
+	if v.IsNil() {
+		return ""
+	}
+	return v.v.String()
 }
 
 func (v *Value) Float64() float64 {
@@ -36,7 +41,7 @@ func (v *Value) Float64() float64 {
 }
 
 func (v *Value) Bool() bool {
-	if v.Kind() == reflect.Bool {
+	if v.k == reflect.Bool {
 		return v.v.Bool()
 	}
 	return false
@@ -51,10 +56,10 @@ func (v *Value) Kind() reflect.Kind {
 }
 
 func (v *Value) IsNil() bool {
-	if !v.v.IsValid() {
+	if !v.v.IsValid() || v.k == reflect.Invalid {
 		return true
 	}
-	switch v.Kind() {
+	switch v.k {
 	case reflect.Chan, reflect.Func, reflect.Map, reflect.Ptr, reflect.UnsafePointer, reflect.Interface, reflect.Slice:
 		return v.v.IsNil()
 	default:

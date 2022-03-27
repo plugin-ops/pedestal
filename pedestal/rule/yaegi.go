@@ -3,6 +3,7 @@ package rule
 import (
 	"context"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"reflect"
 
 	"github.com/plugin-ops/pedestal/pedestal/action"
@@ -18,9 +19,10 @@ type Golang struct {
 	relyOn      map[string]reflect.Value
 	err         error
 	hasError    *bool
+	entry       *logrus.Entry
 }
 
-func NewGolang(content string) (*Golang, error) {
+func NewGolang(entry *logrus.Entry, content string) (*Golang, error) {
 	g := &Golang{
 		info: &info{
 			content:  content,
@@ -31,6 +33,7 @@ func NewGolang(content string) (*Golang, error) {
 		interpreter: interp.New(interp.Options{}),
 		relyOn:      map[string]reflect.Value{},
 		hasError:    new(bool),
+		entry:       entry,
 	}
 	err := g.parseInfo()
 	if err != nil {
@@ -44,21 +47,25 @@ func (g *Golang) Info() Info {
 }
 
 func (g *Golang) Set(recipient string, value *action.Value) error {
+	g.entry.Tracef("%v set %v = %v\n", g.info.Key(), recipient, value.String())
 	g.info.params[recipient] = value
 	return nil
 }
 
 func (g *Golang) AddRelyOn(recipient string, dependency action.Action) error {
+	g.entry.Tracef("%v add rely on: %v\n", g.info.Key(), action.GenerateActionKey(dependency))
 	g.relyOn[recipient] = reflect.ValueOf(newGolangAction(dependency, g.hasError))
 	return nil
 }
 
 func (g *Golang) Get(name string) (*action.Value, error) {
 	value, err := g.interpreter.Eval(name)
+	g.entry.Tracef("%v get %v's value: %v\n", g.info.Key(), name, action.NewValue(value).Interface())
 	return action.NewValue(value), err
 }
 
 func (g *Golang) Do(ctx context.Context) error {
+	g.entry.Infof("%v starts work\n", g.info.Key())
 	_, err := g.interpreter.ExecuteWithContext(ctx, g.program)
 	if err != nil {
 		return err
@@ -98,6 +105,7 @@ func (g *Golang) Compile() error {
 
 func (g *Golang) SetError(i interface{}) {
 	if i != nil {
+		g.entry.Errorf("%v generate an error:%v\n", g.info.Key(), i)
 		g.err = fmt.Errorf("%v", i)
 		*g.hasError = true
 	}
