@@ -4,6 +4,7 @@ var ( // public
 	Version   string
 	PluginDir string
 	RuleDir   string
+	LogDir    = "./log"
 )
 
 var ( // interact with the server

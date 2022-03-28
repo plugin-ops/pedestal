@@ -3,7 +3,7 @@ package plugin
 import (
 	"context"
 	"fmt"
-	"github.com/plugin-ops/pedestal/pedestal/config"
+	"github.com/gogf/gf/v2/os/glog"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -13,10 +13,11 @@ import (
 	"sync"
 
 	"github.com/plugin-ops/pedestal/pedestal/action"
+	"github.com/plugin-ops/pedestal/pedestal/config"
+	"github.com/plugin-ops/pedestal/pedestal/log"
 	"github.com/plugin-ops/pedestal/pedestal/plugin/proto"
 
 	"github.com/hashicorp/go-plugin"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
@@ -25,7 +26,7 @@ var (
 	pluginMutex = &sync.Mutex{}
 )
 
-func LoadPluginWithLocal(entry *logrus.Entry, path string) error {
+func LoadPluginWithLocal(stage *log.Stage, path string) error {
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig: handshakeConfig,
 		Plugins: map[string]plugin.Plugin{
@@ -43,7 +44,7 @@ func LoadPluginWithLocal(entry *logrus.Entry, path string) error {
 	c := raw.(proto.DriverClient)
 
 	a := &driverGRPCClient{impl: c}
-	action.RegisterAction(entry, a)
+	action.RegisterAction(stage, a)
 
 	{
 		pluginMutex.Lock()
@@ -56,17 +57,17 @@ func LoadPluginWithLocal(entry *logrus.Entry, path string) error {
 		pluginMutex.Unlock()
 	}
 
-	entry.Infof("load local plugin %v, discover plugins %v@%v\n", path, a.Name(), a.Version())
+	glog.Infof(stage.Context(), "load local plugin %v, discover plugins %v@%v\n", path, a.Name(), a.Version())
 	return nil
 }
 
-func LoadPluginWithLocalDir(entry *logrus.Entry, dir string) error {
+func LoadPluginWithLocalDir(stage *log.Stage, dir string) error {
 	fs, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return err
 	}
 	for _, f := range fs {
-		err = LoadPluginWithLocal(entry, path.Join(dir, f.Name()))
+		err = LoadPluginWithLocal(stage, path.Join(dir, f.Name()))
 		if err != nil {
 			return err
 		}
@@ -74,7 +75,7 @@ func LoadPluginWithLocalDir(entry *logrus.Entry, dir string) error {
 	return err
 }
 
-func ReLoadPluginWithDir(entry *logrus.Entry, dir string) error {
+func ReLoadPluginWithDir(stage *log.Stage, dir string) error {
 	failedPlugin := []string{}
 	for s := range plugins {
 		nv := strings.Split(s, "@")
@@ -87,16 +88,16 @@ func ReLoadPluginWithDir(entry *logrus.Entry, dir string) error {
 			failedPlugin = append(failedPlugin, s)
 			continue
 		}
-		action.RemoveAction(entry, nv[0], float32(ff))
+		action.RemoveAction(stage, nv[0], float32(ff))
 	}
-	UninstallAllPlugin(entry)
+	UninstallAllPlugin(stage)
 	if len(failedPlugin) > 0 {
 		return fmt.Errorf("plugins [%v] uninstall failed, please retry loading all plugin after processing", strings.Join(failedPlugin, ", "))
 	}
-	return LoadPluginWithLocalDir(entry, dir)
+	return LoadPluginWithLocalDir(stage, dir)
 }
 
-func CleanUselessPluginFile(entry *logrus.Entry) error {
+func CleanUselessPluginFile(stage *log.Stage) error {
 	files, err := ioutil.ReadDir(config.PluginDir)
 	if err != nil {
 		return err
@@ -118,7 +119,7 @@ func CleanUselessPluginFile(entry *logrus.Entry) error {
 			if err != nil {
 				errStrs = append(errStrs, err.Error())
 			}
-			entry.Infof("clean useless plugin file %v in %v", file.Name(), config.PluginDir)
+			glog.Infof(stage.Context(), "clean useless plugin file %v in %v", file.Name(), config.PluginDir)
 		}
 	}
 	pluginMutex.Unlock()
@@ -129,7 +130,7 @@ func CleanUselessPluginFile(entry *logrus.Entry) error {
 	return nil
 }
 
-func UninstallAllPlugin(entry *logrus.Entry) {
+func UninstallAllPlugin(stage *log.Stage) {
 	pluginMutex.Lock()
 	for _, client := range plugins {
 		client.Kill()
@@ -139,16 +140,16 @@ func UninstallAllPlugin(entry *logrus.Entry) {
 	for s := range plugins {
 		current = append(current, s)
 	}
-	entry.Warnf("uninstall all plugin, current working plugins: %v", strings.Join(current, ";"))
+	glog.Warningf(stage.Context(), "uninstall all plugin, current working plugins: %v", strings.Join(current, ";"))
 	plugins = map[string]*plugin.Client{}
 	pluginMutex.Unlock()
 }
 
-func UninstallPlugin(entry *logrus.Entry, actionName string, actionVersion float32) {
+func UninstallPlugin(stage *log.Stage, actionName string, actionVersion float32) {
 	pluginMutex.Lock()
-	action.RemoveAction(entry, actionName, actionVersion)
+	action.RemoveAction(stage, actionName, actionVersion)
 	key := fmt.Sprintf("%v@%v", actionName, actionVersion)
-	entry.Infof("uninstall the plugin for action %v\n", key)
+	glog.Infof(stage.Context(), "uninstall the plugin for action %v\n", key)
 	plugins[key].Kill()
 	delete(plugins, key)
 	pluginMutex.Unlock()

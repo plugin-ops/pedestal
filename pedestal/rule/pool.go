@@ -6,8 +6,9 @@ import (
 	"sync"
 
 	"github.com/plugin-ops/pedestal/pedestal/config"
+	"github.com/plugin-ops/pedestal/pedestal/log"
 
-	"github.com/sirupsen/logrus"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 var (
@@ -15,13 +16,13 @@ var (
 	poolMutex = &sync.RWMutex{}
 )
 
-func RegistryRuleAndStoreToLocal(entry *logrus.Entry, info Info) error {
+func RegistryRuleAndStoreToLocal(stage *log.Stage, info Info) error {
 	poolMutex.Lock()
 	defer poolMutex.Unlock()
 
-	registryRule(entry, info)
+	registryRule(stage, info)
 
-	entry.Infof("store rule %v to %v\n", info.Key(), config.RuleDir)
+	glog.Infof(stage.Context(), "store rule %v to %v\n", info.Key(), config.RuleDir)
 	f, err := os.Create(path.Join(config.RuleDir, info.Key()))
 	if err != nil {
 		return err
@@ -32,12 +33,12 @@ func RegistryRuleAndStoreToLocal(entry *logrus.Entry, info Info) error {
 }
 
 // GetRule returns the latest rule when the incoming version is -1
-func GetRule(entry *logrus.Entry, name string, version float32) (rule Rule, exist bool, err error) {
+func GetRule(stage *log.Stage, name string, version float32) (rule Rule, exist bool, err error) {
 	poolMutex.RLock()
 	defer poolMutex.RUnlock()
 
 	if _, ok := pool[name]; !ok {
-		entry.Warnf("get rule %v failed, because not exist\n", name)
+		glog.Warningf(stage.Context(), "get rule %v failed, because not exist\n", name)
 		return
 	}
 	var info Info
@@ -59,14 +60,14 @@ func GetRule(entry *logrus.Entry, name string, version float32) (rule Rule, exis
 	}
 
 	if info == nil {
-		entry.Warnf("get rule %v%v failed, because not exist\n", name, version)
+		glog.Warningf(stage.Context(), "get rule %v%v failed, because not exist\n", name, version)
 		return
 	}
-	entry.Infof("get rule %v", info.Key())
+	glog.Infof(stage.Context(), "get rule %v", info.Key())
 
 	switch info.RuleType() {
 	case RuleTypeGo:
-		rule, err = NewGolang(info.OriginalContent())
+		rule, err = NewGolang(stage, info.OriginalContent())
 		return rule, true, err
 	default:
 		return nil, false, ErrorUnknownRuleType
@@ -74,19 +75,19 @@ func GetRule(entry *logrus.Entry, name string, version float32) (rule Rule, exis
 
 }
 
-func RegistryRule(entry *logrus.Entry, info Info) {
+func RegistryRule(stage *log.Stage, info Info) {
 	poolMutex.Lock()
-	registryRule(entry, info)
+	registryRule(stage, info)
 	poolMutex.Unlock()
 }
 
-func registryRule(entry *logrus.Entry, info Info) {
-	entry.Infof("registry rule: %v\n", info.Key())
+func registryRule(stage *log.Stage, info Info) {
+	glog.Infof(stage.Context(), "registry rule: %v\n", info.Key())
 	if _, ok := pool[info.Name()]; !ok {
 		pool[info.Name()] = map[float32]Info{}
 	}
 	if _, ok := pool[info.Name()][info.Version()]; ok {
-		entry.Infof("rule %v already exists，will be overwritten\n", info.Key())
+		glog.Infof(stage.Context(), "rule %v already exists，will be overwritten\n", info.Key())
 	}
 	pool[info.Name()][info.Version()] = info
 }

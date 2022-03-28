@@ -1,54 +1,27 @@
 package log
 
 import (
-	"fmt"
-	"io"
-	"math/rand"
-	"os"
-	"strings"
-
-	"github.com/sirupsen/logrus"
-	rotate "gopkg.in/natefinch/lumberjack.v2"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/plugin-ops/pedestal/pedestal/config"
 )
 
-var std *logrus.Logger
-
-func Logger() *logrus.Logger {
-	return std
-}
-
-func NewEntry() *logrus.Entry {
-	return std.WithFields(logrus.Fields{
-		"thread_id": genRandomThreadId(),
-	})
-}
-
 func init() {
-	std = logrus.New()
+	initLogger()
 }
 
-func InitLogger(filePath string) {
-	std.SetOutput(NewRotateFile(filePath, "/pedestal.log", 1024 /*1GB*/))
+type logKey string
+
+const logContextKey logKey = "log_key"
+
+func initLogger() {
+	glog.SetCtxKeys(logContextKey)
 }
 
-func ExitLogger() {
-	w := std.Out
-	std.SetOutput(os.Stderr)
-	if wc, ok := w.(io.Closer); ok {
-		wc.Close()
+func InitLoggerOnPedestal() error {
+	if err := glog.SetPath(config.LogDir); err != nil {
+		return err
 	}
-}
-
-func NewRotateFile(filePath, fileName string, maxSize int) *rotate.Logger {
-	return &rotate.Logger{
-		Filename: strings.TrimRight(filePath, "/") + fileName,
-		MaxSize:  maxSize,
-	}
-}
-
-func genRandomThreadId() string {
-	seq := "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	l := len(seq)
-	a := rand.Intn(l * l * l)
-	return fmt.Sprintf("%c%c%c", seq[a%l], seq[(a/l)%l], seq[(a/l/l)%l])
+	glog.SetFile("pedestal-{Y-m-d}.log")
+	glog.SetStdoutPrint(false)
+	return nil
 }

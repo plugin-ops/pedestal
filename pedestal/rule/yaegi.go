@@ -3,11 +3,12 @@ package rule
 import (
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"reflect"
 
 	"github.com/plugin-ops/pedestal/pedestal/action"
+	"github.com/plugin-ops/pedestal/pedestal/log"
 
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/traefik/yaegi/interp"
 	"github.com/traefik/yaegi/stdlib"
 )
@@ -19,21 +20,21 @@ type Golang struct {
 	relyOn      map[string]reflect.Value
 	err         error
 	hasError    *bool
-	entry       *logrus.Entry
+	stage       *log.Stage
 }
 
-func NewGolang(entry *logrus.Entry, content string) (*Golang, error) {
+func NewGolang(stage *log.Stage, content string) (*Golang, error) {
 	g := &Golang{
 		info: &info{
 			content:  content,
 			ruleType: RuleTypeGo,
 			relyOn:   map[string]string{},
-			params:   map[string]interface{}{},
+			params:   map[string]string{},
 		},
 		interpreter: interp.New(interp.Options{}),
 		relyOn:      map[string]reflect.Value{},
 		hasError:    new(bool),
-		entry:       entry,
+		stage:       stage,
 	}
 	err := g.parseInfo()
 	if err != nil {
@@ -47,25 +48,25 @@ func (g *Golang) Info() Info {
 }
 
 func (g *Golang) Set(recipient string, value *action.Value) error {
-	g.entry.Tracef("%v set %v = %v\n", g.info.Key(), recipient, value.String())
-	g.info.params[recipient] = value
+	glog.Infof(g.stage.Context(), "%v set %v = %v\n", g.info.Key(), recipient, value.String())
+	g.info.params[recipient] = value.String()
 	return nil
 }
 
 func (g *Golang) AddRelyOn(recipient string, dependency action.Action) error {
-	g.entry.Tracef("%v add rely on: %v\n", g.info.Key(), action.GenerateActionKey(dependency))
+	glog.Infof(g.stage.Context(), "%v add rely on: %v\n", g.info.Key(), action.GenerateActionKey(dependency))
 	g.relyOn[recipient] = reflect.ValueOf(newGolangAction(dependency, g.hasError))
 	return nil
 }
 
 func (g *Golang) Get(name string) (*action.Value, error) {
 	value, err := g.interpreter.Eval(name)
-	g.entry.Tracef("%v get %v's value: %v\n", g.info.Key(), name, action.NewValue(value).Interface())
+	glog.Infof(g.stage.Context(), "%v get %v's value: %v\n", g.info.Key(), name, action.NewValue(value).Interface())
 	return action.NewValue(value), err
 }
 
 func (g *Golang) Do(ctx context.Context) error {
-	g.entry.Infof("%v starts work\n", g.info.Key())
+	glog.Infof(g.stage.Context(), "%v starts work\n", g.info.Key())
 	_, err := g.interpreter.ExecuteWithContext(ctx, g.program)
 	if err != nil {
 		return err
@@ -105,7 +106,7 @@ func (g *Golang) Compile() error {
 
 func (g *Golang) SetError(i interface{}) {
 	if i != nil {
-		g.entry.Errorf("%v generate an error:%v\n", g.info.Key(), i)
+		glog.Errorf(g.stage.Context(), "%v generate an error:%v\n", g.info.Key(), i)
 		g.err = fmt.Errorf("%v", i)
 		*g.hasError = true
 	}
@@ -166,7 +167,7 @@ func (g *Golang) parseInfo() (err error) {
 			}
 			iter := value.MapRange()
 			for iter.Next() {
-				g.info.params[iter.Key().String()] = iter.Value().Interface()
+				g.info.params[iter.Key().String()] = iter.Value().String()
 			}
 		}
 	}

@@ -7,7 +7,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/sirupsen/logrus"
+	"github.com/plugin-ops/pedestal/pedestal/log"
+
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 var (
@@ -15,7 +17,7 @@ var (
 	poolMutex = &sync.RWMutex{}
 )
 
-func ListActionName(entry *logrus.Entry) []string {
+func ListActionName(stage *log.Stage) []string {
 	names := []string{}
 	poolMutex.RLock()
 	for _, s := range pool {
@@ -24,25 +26,25 @@ func ListActionName(entry *logrus.Entry) []string {
 		}
 	}
 	poolMutex.RUnlock()
-	entry.Tracef("get action list success, current Action list: %v\n", strings.Join(names, ";"))
+	glog.Infof(stage.Context(), "get action list success, current Action list: %v\n", strings.Join(names, ";"))
 	return names
 }
 
-func RegisterAction(entry *logrus.Entry, a Action) {
-	entry.Infof("registry action: %v\n", GenerateActionKey(a))
+func RegisterAction(stage *log.Stage, a Action) {
+	glog.Infof(stage.Context(), "registry action: %v\n", GenerateActionKey(a))
 	poolMutex.Lock()
 	if _, ok := pool[a.Name()]; !ok {
 		pool[a.Name()] = map[float32]Action{}
 	}
 	if _, ok := pool[a.Name()][a.Version()]; ok {
-		entry.Infof("action %v already exists，will be overwritten\n", GenerateActionKey(a))
+		glog.Infof(stage.Context(), "action %v already exists，will be overwritten\n", GenerateActionKey(a))
 	}
 	pool[a.Name()][a.Version()] = a
 	poolMutex.Unlock()
 }
 
-func CleanAllAction(entry *logrus.Entry) {
-	entry.Warnln("clean all action...")
+func CleanAllAction(stage *log.Stage) {
+	glog.Warning(stage.Context(), "clean all action...")
 	poolMutex.Lock()
 	pool = map[string]map[float32]Action{}
 	poolMutex.Unlock()
@@ -50,13 +52,13 @@ func CleanAllAction(entry *logrus.Entry) {
 }
 
 // RemoveAction when the incoming version is -1, all versions of actions will be cleared
-func RemoveAction(entry *logrus.Entry, name string, version float32) {
+func RemoveAction(stage *log.Stage, name string, version float32) {
 	poolMutex.Lock()
 	if version == -1 {
-		entry.Warnf("remove all actions named %v\n", name)
+		glog.Warningf(stage.Context(), "remove all actions named %v\n", name)
 		pool[name] = map[float32]Action{}
 	} else {
-		entry.Warnf("remove action %v@%v\n", name, version)
+		glog.Warningf(stage.Context(), "remove action %v@%v\n", name, version)
 		set, ok := pool[name]
 		if ok {
 			delete(set, version)
@@ -67,12 +69,12 @@ func RemoveAction(entry *logrus.Entry, name string, version float32) {
 }
 
 // GetAction returns the latest action when the incoming version is -1
-func GetAction(entry *logrus.Entry, name string, version float32) (a Action, exist bool) {
+func GetAction(stage *log.Stage, name string, version float32) (a Action, exist bool) {
 	poolMutex.RLock()
 	defer poolMutex.RUnlock()
 
 	if _, ok := pool[name]; !ok {
-		entry.Warnf("get action %v failed, because not exist\n", name)
+		glog.Warningf(stage.Context(), "get action %v failed, because not exist\n", name)
 		return
 	}
 
@@ -94,10 +96,10 @@ func GetAction(entry *logrus.Entry, name string, version float32) (a Action, exi
 	}
 
 	if a == nil {
-		entry.Warnf("get action %v%v failed, because not exist\n", name, version)
+		glog.Warningf(stage.Context(), "get action %v%v failed, because not exist\n", name, version)
 		return a, false
 	}
-	entry.Infof("get action %v", GenerateActionKey(a))
+	glog.Infof(stage.Context(), "get action %v", GenerateActionKey(a))
 	return a, true
 }
 
