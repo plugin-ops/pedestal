@@ -1,70 +1,13 @@
 package action
 
-import (
-	"reflect"
-	"strconv"
-)
+import "github.com/gogf/gf/v2/container/gvar"
 
 type Value struct {
-	v reflect.Value
-	k reflect.Kind
+	*gvar.Var
 }
 
-func NewValue(v interface{}) *Value {
-	if _, ok := v.(*Value); ok {
-		return v.(*Value)
-	}
-	value := &Value{
-		v: reflect.ValueOf(v),
-	}
-	value.k = value.v.Kind()
-	return value
-}
-
-func (v *Value) Interface() interface{} {
-	if v.IsNil() {
-		return nil
-	}
-	return v.v.Interface()
-}
-
-func (v *Value) String() string {
-	if v.IsNil() {
-		return ""
-	}
-	return v.v.String()
-}
-
-func (v *Value) Float64() float64 {
-	f, _ := strconv.ParseFloat(v.String(), 10)
-	return f
-}
-
-func (v *Value) Bool() bool {
-	if v.k == reflect.Bool {
-		return v.v.Bool()
-	}
-	return false
-}
-
-func (v *Value) Value() reflect.Value {
-	return v.v
-}
-
-func (v *Value) Kind() reflect.Kind {
-	return v.k
-}
-
-func (v *Value) IsNil() bool {
-	if !v.v.IsValid() || v.k == reflect.Invalid {
-		return true
-	}
-	switch v.k {
-	case reflect.Chan, reflect.Func, reflect.Map, reflect.Ptr, reflect.UnsafePointer, reflect.Interface, reflect.Slice:
-		return v.v.IsNil()
-	default:
-		return false
-	}
+func NewValue(i interface{}) *Value {
+	return &Value{gvar.New(i, true)}
 }
 
 func ConvertSliceToValueSlice(i ...interface{}) []*Value {

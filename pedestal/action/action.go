@@ -1,6 +1,8 @@
 package action
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Action interface {
 	Name() string

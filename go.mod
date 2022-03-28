@@ -3,6 +3,7 @@ module github.com/plugin-ops/pedestal
 go 1.17
 
 require (
+	github.com/gogf/gf v1.16.7
 	github.com/gogf/gf/v2 v2.0.4
 	github.com/hashicorp/go-plugin v1.4.3
 	github.com/swaggo/swag v1.8.0
