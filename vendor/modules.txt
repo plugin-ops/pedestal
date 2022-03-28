@@ -56,20 +56,6 @@ github.com/go-redis/redis/v8/internal/rand
 github.com/go-redis/redis/v8/internal/util
 # github.com/gogf/gf v1.16.7
 ## explicit; go 1.14
-github.com/gogf/gf/container/gtype
-github.com/gogf/gf/container/gvar
-github.com/gogf/gf/encoding/gbinary
-github.com/gogf/gf/errors/gcode
-github.com/gogf/gf/errors/gerror
-github.com/gogf/gf/internal/command
-github.com/gogf/gf/internal/empty
-github.com/gogf/gf/internal/json
-github.com/gogf/gf/internal/structs
-github.com/gogf/gf/internal/utils
-github.com/gogf/gf/os/gtime
-github.com/gogf/gf/text/gregex
-github.com/gogf/gf/util/gconv
-github.com/gogf/gf/util/gutil
 # github.com/gogf/gf/v2 v2.0.4
 ## explicit; go 1.15
 github.com/gogf/gf/v2
@@ -134,8 +120,11 @@ github.com/gogf/gf/v2/util/gmeta
 github.com/gogf/gf/v2/util/gmode
 github.com/gogf/gf/v2/util/grand
 github.com/gogf/gf/v2/util/gtag
+github.com/gogf/gf/v2/util/guid
 github.com/gogf/gf/v2/util/gutil
 github.com/gogf/gf/v2/util/gvalid
+# github.com/gogf/guuid v1.0.0
+## explicit; go 1.11
 # github.com/golang/protobuf v1.5.2
 ## explicit; go 1.9
 github.com/golang/protobuf/proto
@@ -145,6 +134,8 @@ github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/empty
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/google/uuid v1.1.1
+## explicit
 # github.com/hashicorp/go-hclog v0.14.1
 ## explicit; go 1.13
 github.com/hashicorp/go-hclog
@@ -175,6 +166,13 @@ github.com/mitchellh/go-testing-interface
 # github.com/oklog/run v1.0.0
 ## explicit
 github.com/oklog/run
+# github.com/panjf2000/ants/v2 v2.4.8
+## explicit; go 1.14
+github.com/panjf2000/ants/v2
+github.com/panjf2000/ants/v2/internal
+# github.com/robfig/cron/v3 v3.0.1
+## explicit; go 1.12
+github.com/robfig/cron/v3
 # github.com/russross/blackfriday/v2 v2.1.0
 ## explicit
 github.com/russross/blackfriday/v2
