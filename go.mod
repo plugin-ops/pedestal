@@ -3,9 +3,10 @@ module github.com/plugin-ops/pedestal
 go 1.17
 
 require (
-	github.com/gogf/gf v1.16.7
 	github.com/gogf/gf/v2 v2.0.4
 	github.com/hashicorp/go-plugin v1.4.3
+	github.com/panjf2000/ants/v2 v2.4.8
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/swaggo/swag v1.8.0
 	github.com/traefik/yaegi v0.11.2
 	github.com/urfave/cli/v2 v2.4.0
@@ -30,7 +31,10 @@ require (
 	github.com/go-openapi/spec v0.20.4 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-redis/redis/v8 v8.11.4 // indirect
+	github.com/gogf/gf v1.16.7 // indirect
+	github.com/gogf/guuid v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/google/uuid v1.1.1 // indirect
 	github.com/hashicorp/go-hclog v0.14.1 // indirect
 	github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb // indirect
 	github.com/josharian/intern v1.0.0 // indirect

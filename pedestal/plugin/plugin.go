@@ -27,6 +27,7 @@ var (
 )
 
 func LoadPluginWithLocal(stage *log.Stage, path string) error {
+	stage = stage.Go("LoadPluginWithLocal")
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig: handshakeConfig,
 		Plugins: map[string]plugin.Plugin{
@@ -62,6 +63,7 @@ func LoadPluginWithLocal(stage *log.Stage, path string) error {
 }
 
 func LoadPluginWithLocalDir(stage *log.Stage, dir string) error {
+	stage = stage.Go("LoadPluginWithLocalDir")
 	fs, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return err
@@ -76,6 +78,7 @@ func LoadPluginWithLocalDir(stage *log.Stage, dir string) error {
 }
 
 func ReLoadPluginWithDir(stage *log.Stage, dir string) error {
+	stage = stage.Go("ReLoadPluginWithDir")
 	failedPlugin := []string{}
 	for s := range plugins {
 		nv := strings.Split(s, "@")
@@ -98,6 +101,7 @@ func ReLoadPluginWithDir(stage *log.Stage, dir string) error {
 }
 
 func CleanUselessPluginFile(stage *log.Stage) error {
+	stage = stage.Go("CleanUselessPluginFile")
 	files, err := ioutil.ReadDir(config.PluginDir)
 	if err != nil {
 		return err
@@ -131,6 +135,7 @@ func CleanUselessPluginFile(stage *log.Stage) error {
 }
 
 func UninstallAllPlugin(stage *log.Stage) {
+	stage = stage.Go("UninstallAllPlugin")
 	pluginMutex.Lock()
 	for _, client := range plugins {
 		client.Kill()
@@ -146,6 +151,7 @@ func UninstallAllPlugin(stage *log.Stage) {
 }
 
 func UninstallPlugin(stage *log.Stage, actionName string, actionVersion float32) {
+	stage = stage.Go("UninstallPlugin")
 	pluginMutex.Lock()
 	action.RemoveAction(stage, actionName, actionVersion)
 	key := fmt.Sprintf("%v@%v", actionName, actionVersion)

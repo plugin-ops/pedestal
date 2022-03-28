@@ -64,13 +64,13 @@ func (s *Stage) Exit() *Stage {
 	return s
 }
 
-func (s *Stage) Go() *Stage {
+func (s *Stage) Go(desc string) *Stage {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	ret := NewStage()
 	copy(ret.stages, s.stages)
 	ret.stagei = s.stagei
-	return ret
+	return ret.Enter(desc)
 }
 
 func (s *Stage) GoNew() *Stage {

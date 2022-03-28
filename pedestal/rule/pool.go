@@ -17,6 +17,7 @@ var (
 )
 
 func RegistryRuleAndStoreToLocal(stage *log.Stage, info Info) error {
+	stage = stage.Go("RegistryRuleAndStoreToLocal")
 	poolMutex.Lock()
 	defer poolMutex.Unlock()
 
@@ -34,6 +35,7 @@ func RegistryRuleAndStoreToLocal(stage *log.Stage, info Info) error {
 
 // GetRule returns the latest rule when the incoming version is -1
 func GetRule(stage *log.Stage, name string, version float32) (rule Rule, exist bool, err error) {
+	stage = stage.Go("GetRule")
 	poolMutex.RLock()
 	defer poolMutex.RUnlock()
 
@@ -76,12 +78,14 @@ func GetRule(stage *log.Stage, name string, version float32) (rule Rule, exist b
 }
 
 func RegistryRule(stage *log.Stage, info Info) {
+	stage = stage.Go("RegistryRule")
 	poolMutex.Lock()
 	registryRule(stage, info)
 	poolMutex.Unlock()
 }
 
 func registryRule(stage *log.Stage, info Info) {
+	stage = stage.Go("registryRule")
 	glog.Infof(stage.Context(), "registry rule: %v\n", info.Key())
 	if _, ok := pool[info.Name()]; !ok {
 		pool[info.Name()] = map[float32]Info{}

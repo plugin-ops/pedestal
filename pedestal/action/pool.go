@@ -18,6 +18,7 @@ var (
 )
 
 func ListActionName(stage *log.Stage) []string {
+	stage = stage.Go("ListActionName")
 	names := []string{}
 	poolMutex.RLock()
 	for _, s := range pool {
@@ -31,6 +32,7 @@ func ListActionName(stage *log.Stage) []string {
 }
 
 func RegisterAction(stage *log.Stage, a Action) {
+	stage = stage.Go("RegisterAction")
 	glog.Infof(stage.Context(), "registry action: %v\n", GenerateActionKey(a))
 	poolMutex.Lock()
 	if _, ok := pool[a.Name()]; !ok {
@@ -44,6 +46,7 @@ func RegisterAction(stage *log.Stage, a Action) {
 }
 
 func CleanAllAction(stage *log.Stage) {
+	stage = stage.Go("CleanAllAction")
 	glog.Warning(stage.Context(), "clean all action...")
 	poolMutex.Lock()
 	pool = map[string]map[float32]Action{}
@@ -53,6 +56,7 @@ func CleanAllAction(stage *log.Stage) {
 
 // RemoveAction when the incoming version is -1, all versions of actions will be cleared
 func RemoveAction(stage *log.Stage, name string, version float32) {
+	stage = stage.Go("RemoveAction")
 	poolMutex.Lock()
 	if version == -1 {
 		glog.Warningf(stage.Context(), "remove all actions named %v\n", name)
@@ -70,6 +74,7 @@ func RemoveAction(stage *log.Stage, name string, version float32) {
 
 // GetAction returns the latest action when the incoming version is -1
 func GetAction(stage *log.Stage, name string, version float32) (a Action, exist bool) {
+	stage = stage.Go("GetAction")
 	poolMutex.RLock()
 	defer poolMutex.RUnlock()
 

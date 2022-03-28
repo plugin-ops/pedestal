@@ -34,7 +34,7 @@ func NewGolang(stage *log.Stage, content string) (*Golang, error) {
 		interpreter: interp.New(interp.Options{}),
 		relyOn:      map[string]reflect.Value{},
 		hasError:    new(bool),
-		stage:       stage,
+		stage:       stage.Go("GolangRule"),
 	}
 	err := g.parseInfo()
 	if err != nil {
