@@ -55,7 +55,7 @@ func (g *Golang) Set(recipient string, value *action.Value) error {
 
 func (g *Golang) AddRelyOn(recipient string, dependency action.Action) error {
 	glog.Infof(g.stage.Context(), "%v add rely on: %v\n", g.info.Key(), action.GenerateActionKey(dependency))
-	g.relyOn[recipient] = reflect.ValueOf(newGolangAction(dependency, g.hasError))
+	g.relyOn[recipient] = reflect.ValueOf(newGolangAction(dependency, g.hasError).Func())
 	return nil
 }
 
@@ -204,4 +204,11 @@ func (g *GolangAction) Version() float32 {
 
 func (g *GolangAction) Description() string {
 	return g.a.Description()
+}
+
+func (g *GolangAction) Func() func(params ...interface{}) (map[string]*action.Value, error) {
+	return func(params ...interface{}) (map[string]*action.Value, error) {
+		values := action.ConvertSliceToValueSlice(params...)
+		return g.Do(values...)
+	}
 }
