@@ -29,7 +29,7 @@ func NewGolang(stage *log.Stage, content string) (*Golang, error) {
 			content:  content,
 			ruleType: RuleTypeGo,
 			relyOn:   map[string]string{},
-			params:   map[string]string{},
+			params:   map[string]*action.Value{},
 		},
 		interpreter: interp.New(interp.Options{}),
 		relyOn:      map[string]reflect.Value{},
@@ -49,7 +49,7 @@ func (g *Golang) Info() Info {
 
 func (g *Golang) Set(recipient string, value *action.Value) error {
 	glog.Infof(g.stage.Context(), "%v set %v = %v\n", g.info.Key(), recipient, value.String())
-	g.info.params[recipient] = value.String()
+	g.info.params[recipient] = value
 	return nil
 }
 
@@ -167,7 +167,7 @@ func (g *Golang) parseInfo() (err error) {
 			}
 			iter := value.MapRange()
 			for iter.Next() {
-				g.info.params[iter.Key().String()] = iter.Value().String()
+				g.info.params[iter.Key().String()] = action.NewValue(iter.Value().String())
 			}
 		}
 	}

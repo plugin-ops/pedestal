@@ -24,8 +24,8 @@ type Info interface {
 	OriginalContent() string
 	Author() string
 	RuleType() RuleType
-	GetRelyOn() map[string]string // map[dependency]recipient
-	GetParams() map[string]string // the dynamic parameters and default values that the rule can accept are recorded here
+	GetRelyOn() map[string]string        // map[recipient]dependency
+	GetParams() map[string]*action.Value // the dynamic parameters and default values that the rule can accept are recorded here
 	Key() string
 }
 
@@ -38,7 +38,7 @@ type info struct {
 	content            string
 	contentDescription string
 	relyOn             map[string]string
-	params             map[string]string
+	params             map[string]*action.Value
 }
 
 func (g *info) Name() string {
@@ -73,7 +73,7 @@ func (g *info) GetRelyOn() map[string]string {
 	return g.relyOn
 }
 
-func (g *info) GetParams() map[string]string {
+func (g *info) GetParams() map[string]*action.Value {
 	return g.params
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -174,14 +175,20 @@ func (b *BuiltInExecutor) Stop() error {
 
 func (b *BuiltInExecutor) CheckAction(r rule.Rule) ([]string, error) {
 	relyOn := []string{}
-	for name := range r.Info().GetRelyOn() {
+	for _, name := range r.Info().GetRelyOn() {
 		relyOn = append(relyOn, name)
 	}
 	notExist := action.CheckActionExist(relyOn...)
 	return notExist, nil
 }
 
-var ErrNotAction = fmt.Errorf("the following actions are not loaded in the pedestal, the rule cannot be executed")
+type ErrNotAction struct {
+	a []string
+}
+
+func (e ErrNotAction) Error() string {
+	return fmt.Sprintf("the following actions(%v) are not loaded in the pedestal, the rule cannot be executed", strings.Join(e.a, ","))
+}
 
 func (b *BuiltInExecutor) execute(t *Task) {
 	t.start()
@@ -195,17 +202,18 @@ func (b *BuiltInExecutor) execute(t *Task) {
 			return
 		}
 		if len(notExist) != 0 {
-			t.failed(ErrNotAction)
+			t.failed(ErrNotAction{notExist})
 			return
 		}
 
 	}
 	{ // add rely on
 		glog.Infof(b.stage.Context(), "add rely on to [%v]", t.TaskID)
-		for d, r := range t.Rule.Info().GetRelyOn() {
-			a, exist := action.GetAction(b.stage, d, t.Rule.Info().Version())
+		for r, d := range t.Rule.Info().GetRelyOn() {
+			name, version := util.ParseInfoKey(d)
+			a, exist := action.GetAction(b.stage, name, version)
 			if !exist {
-				t.failed(ErrNotAction)
+				t.failed(ErrNotAction{[]string{d}})
 				return
 			}
 			err := sc.AddRelyOn(r, a)
@@ -250,7 +258,7 @@ func (b *BuiltInExecutor) execute(t *Task) {
 
 func (b *BuiltInExecutor) Execute(r rule.Rule, params map[string]interface{}, callback CallbackFunc) (string, error) {
 	b.mutex.Lock()
-	id := guid.S()
+	id := generateTaskID()
 	t := &Task{
 		TaskID:   id,
 		Rule:     r,
@@ -268,7 +276,7 @@ func (b *BuiltInExecutor) Execute(r rule.Rule, params map[string]interface{}, ca
 
 func (b *BuiltInExecutor) AddTask(r rule.Rule, params map[string]interface{}, callback CallbackFunc) (string, error) {
 	b.mutex.Lock()
-	id := guid.S()
+	id := generateTaskID()
 	t := &Task{
 		TaskID:   id,
 		Rule:     r,
@@ -287,7 +295,7 @@ func (b *BuiltInExecutor) AddTask(r rule.Rule, params map[string]interface{}, ca
 
 func (b *BuiltInExecutor) AddScheduledTask(cron string, r rule.Rule, params map[string]interface{}, callback CallbackFunc) (string, error) {
 	b.mutex.Lock()
-	id := guid.S()
+	id := generateTaskID()
 	t := &Task{
 		TaskID:   id,
 		Rule:     r,
@@ -333,6 +341,10 @@ func (b *BuiltInExecutor) GetTask(id string) *Task {
 	return b.taskSet[id]
 }
 
+func generateTaskID() string {
+	return fmt.Sprintf("task-%v", guid.S())
+}
+
 type Task struct {
 	rule.Rule
 
@@ -354,7 +366,7 @@ func (t *Task) failed(err error) {
 	t.Error = err
 	t.Status = TaskStatus_Fail
 	t.EndTime = time.Now()
-	glog.Infof(t.stage.Context(), "[%v] failed at %v", t.TaskID, t.RunningTime)
+	glog.Infof(t.stage.Context(), "[%v] failed at %v, error: %v", t.TaskID, t.RunningTime, t.Error)
 }
 
 func (t *Task) over() {

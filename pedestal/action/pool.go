@@ -79,7 +79,7 @@ func GetAction(stage *log.Stage, name string, version float32) (a Action, exist 
 	defer poolMutex.RUnlock()
 
 	if _, ok := pool[name]; !ok {
-		glog.Warningf(stage.Context(), "get action %v failed, because not exist\n", name)
+		glog.Warningf(stage.Context(), "get action %v failed, because not exist", name)
 		return
 	}
 
@@ -101,7 +101,7 @@ func GetAction(stage *log.Stage, name string, version float32) (a Action, exist 
 	}
 
 	if a == nil {
-		glog.Warningf(stage.Context(), "get action %v%v failed, because not exist\n", name, version)
+		glog.Warningf(stage.Context(), "get action %v%v failed, because not exist", name, version)
 		return a, false
 	}
 	glog.Infof(stage.Context(), "get action %v", GenerateActionKey(a))
@@ -109,11 +109,11 @@ func GetAction(stage *log.Stage, name string, version float32) (a Action, exist 
 }
 
 // CheckActionExist return not exist list
-func CheckActionExist(names ...string) []string {
+func CheckActionExist(key ...string) []string {
 	notExist := []string{}
 
 	temp := map[string][]float32{}
-	for _, name := range names {
+	for _, name := range key {
 		nv := strings.Split(name, "@")
 		if temp[nv[0]] == nil {
 			temp[nv[0]] = []float32{}

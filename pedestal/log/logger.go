@@ -1,6 +1,7 @@
 package log
 
 import (
+	"context"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/plugin-ops/pedestal/pedestal/config"
 )
@@ -23,5 +24,6 @@ func InitLoggerOnPedestal() error {
 	}
 	glog.SetFile("pedestal-{Y-m-d}.log")
 	glog.SetStdoutPrint(false)
+	glog.Printf(context.TODO(), "\n\n--------------------------------------------------------------------------------\n\n")
 	return nil
 }
