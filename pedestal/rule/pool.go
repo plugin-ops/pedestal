@@ -1,8 +1,10 @@
 package rule
 
 import (
+	"io/ioutil"
 	"os"
 	"path"
+	"runtime"
 	"sync"
 
 	"github.com/plugin-ops/pedestal/pedestal/config"
@@ -85,7 +87,6 @@ func RegistryRule(stage *log.Stage, info Info) {
 }
 
 func registryRule(stage *log.Stage, info Info) {
-	stage = stage.Go("registryRule")
 	glog.Infof(stage.Context(), "registry rule: %v\n", info.Key())
 	if _, ok := pool[info.Name()]; !ok {
 		pool[info.Name()] = map[float32]Info{}
@@ -94,4 +95,65 @@ func registryRule(stage *log.Stage, info Info) {
 		glog.Infof(stage.Context(), "rule %v already exists，will be overwritten\n", info.Key())
 	}
 	pool[info.Name()][info.Version()] = info
+}
+
+func ReLoadRuleWithDir(stage *log.Stage, dir string) error {
+	stage = stage.Go("ReLoadRuleWithDir")
+	poolMutex.Lock()
+	defer poolMutex.Unlock()
+	cleanAllRule(stage)
+	return loadRuleWithDir(stage, dir)
+}
+
+func LoadRuleWithDir(stage *log.Stage, dir string) error {
+	stage = stage.Go("LoadRuleWithDir")
+	poolMutex.Lock()
+	defer poolMutex.Unlock()
+	return loadRuleWithDir(stage, dir)
+}
+
+func loadRuleWithDir(stage *log.Stage, dir string) error {
+	fs, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	for _, f := range fs {
+		err = loadRuleWithLocal(stage, path.Join(dir, f.Name()))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func LoadRuleWithLocal(stage *log.Stage, path string) error {
+	stage = stage.Go("LoadRuleWithLocal")
+	poolMutex.Lock()
+	defer poolMutex.Unlock()
+	return loadRuleWithLocal(stage, path)
+}
+
+func loadRuleWithLocal(stage *log.Stage, path string) error {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	ru, err := NewGolang(stage, string(content))
+	if err != nil {
+		return err
+	}
+	registryRule(stage, ru.info)
+	return nil
+}
+
+func CleanAllRule(stage *log.Stage) {
+	stage = stage.Go("CleanAllRule")
+	poolMutex.Lock()
+	cleanAllRule(stage)
+	poolMutex.Unlock()
+}
+
+func cleanAllRule(stage *log.Stage) {
+	pool = map[string]map[float32]Info{}
+	runtime.GC()
 }

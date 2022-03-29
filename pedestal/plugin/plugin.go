@@ -74,7 +74,7 @@ func LoadPluginWithLocalDir(stage *log.Stage, dir string) error {
 			return err
 		}
 	}
-	return err
+	return nil
 }
 
 func ReLoadPluginWithDir(stage *log.Stage, dir string) error {

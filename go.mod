@@ -7,6 +7,7 @@ require (
 	github.com/hashicorp/go-plugin v1.4.3
 	github.com/panjf2000/ants/v2 v2.4.8
 	github.com/robfig/cron/v3 v3.0.1
+	github.com/spf13/cobra v1.4.0
 	github.com/swaggo/swag v1.8.0
 	github.com/traefik/yaegi v0.11.2
 	github.com/urfave/cli/v2 v2.4.0
@@ -37,6 +38,7 @@ require (
 	github.com/grokify/html-strip-tags-go v0.0.1 // indirect
 	github.com/hashicorp/go-hclog v0.14.1 // indirect
 	github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb // indirect
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mattn/go-colorable v0.1.9 // indirect
@@ -46,6 +48,7 @@ require (
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	go.opentelemetry.io/otel v1.0.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.0.0 // indirect
 	go.opentelemetry.io/otel/trace v1.0.0 // indirect
