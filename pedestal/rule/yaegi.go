@@ -48,25 +48,25 @@ func (g *Golang) Info() Info {
 }
 
 func (g *Golang) Set(recipient string, value *action.Value) error {
-	glog.Infof(g.stage.Context(), "%v set %v = %v\n", g.info.Key(), recipient, value.String())
+	glog.Infof(g.stage.Context(), "[%v] set %v = %v\n", g.info.Key(), recipient, value.String())
 	g.info.params[recipient] = value
 	return nil
 }
 
 func (g *Golang) AddRelyOn(recipient string, dependency action.Action) error {
-	glog.Infof(g.stage.Context(), "%v add rely on: %v\n", g.info.Key(), action.GenerateActionKey(dependency))
+	glog.Infof(g.stage.Context(), "[%v] add rely on: %v\n", g.info.Key(), action.GenerateActionKey(dependency))
 	g.relyOn[recipient] = reflect.ValueOf(newGolangAction(dependency, g.hasError).Func())
 	return nil
 }
 
 func (g *Golang) Get(name string) (*action.Value, error) {
 	value, err := g.interpreter.Eval(name)
-	glog.Infof(g.stage.Context(), "%v get %v's value: %v\n", g.info.Key(), name, action.NewValue(value).Interface())
+	glog.Infof(g.stage.Context(), "[%v] get %v's value: %v\n", g.info.Key(), name, action.NewValue(value).Interface())
 	return action.NewValue(value), err
 }
 
 func (g *Golang) Do(ctx context.Context) error {
-	glog.Infof(g.stage.Context(), "%v starts work\n", g.info.Key())
+	glog.Infof(g.stage.Context(), "[%v] starts work\n", g.info.Key())
 	_, err := g.interpreter.ExecuteWithContext(ctx, g.program)
 	if err != nil {
 		return err
@@ -106,7 +106,7 @@ func (g *Golang) Compile() error {
 
 func (g *Golang) SetError(i interface{}) {
 	if i != nil {
-		glog.Errorf(g.stage.Context(), "%v generate an error:%v\n", g.info.Key(), i)
+		glog.Errorf(g.stage.Context(), "[%v] generate an error:%v\n", g.info.Key(), i)
 		g.err = fmt.Errorf("%v", i)
 		*g.hasError = true
 	}
