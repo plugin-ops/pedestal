@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	v1 "github.com/plugin-ops/pedestal/pedestal/app/api/http/v1"
-
 	"github.com/plugin-ops/pedestal/pedestal/config"
+	"path"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -16,9 +16,12 @@ func StartHttpServer() error {
 
 	registerRouter(s)
 
-	s.SetAddr(fmt.Sprintf("%v:%v", config.HttpIP, config.HttpPort))
+	err := setConfig(s)
+	if err != nil {
+		return err
+	}
 
-	err := s.Start()
+	err = s.Start()
 	if err != nil {
 		return err
 	}
@@ -37,4 +40,19 @@ func registerRouter(s *ghttp.Server) {
 		group.POST("rule/run", v1.RunRule)
 		group.POST("rule/add", v1.AddRule)
 	})
+}
+
+func setConfig(s *ghttp.Server) (err error) {
+
+	s.SetAddr(fmt.Sprintf("%v:%v", config.HttpIP, config.HttpPort))
+	s.SetLogStdout(true)
+	s.SetAccessLogEnabled(true)
+	s.SetErrorLogEnabled(true)
+
+	err = s.SetLogPath(path.Join(config.LogDir, "api.log"))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

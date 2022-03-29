@@ -82,7 +82,7 @@ func (g *info) Key() string {
 }
 
 const (
-	BODY_TAG = "//--body--"
+	ConfigTag = "//--config--"
 )
 
 const ( // The pedestal will take the value of the parameter below from the ruleInfo
@@ -94,11 +94,11 @@ const ( // The pedestal will take the value of the parameter below from the rule
 )
 
 func getInfoContent(ruleContent string) string {
-	index := strings.Index(ruleContent, BODY_TAG)
+	index := strings.Index(ruleContent, ConfigTag)
 	if index == -1 {
 		return ""
 	}
-	return ruleContent[:index]
+	return ruleContent[index:]
 }
 
 var (

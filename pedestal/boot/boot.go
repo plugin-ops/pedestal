@@ -44,6 +44,7 @@ func Run() {
 func registerFlag(c *cobra.Command) {
 	c.Flags().StringVarP(&config.PluginDir, "plugin-dir", "p", "./plugin", "Plugin storage directory")
 	c.Flags().StringVarP(&config.RuleDir, "rule-dir", "r", "", "Rule storage address")
+	c.Flags().StringVarP(&config.LogDir, "log-dir", "l", "", "Log storage address")
 	c.Flags().BoolVarP(&config.EnableHttpServer, "enable-http-server", "s", false, "enable http server")
 }
 
@@ -51,6 +52,27 @@ func run(cmd *cobra.Command, _ []string) (err error) {
 	stage := log.NewStage().Enter("StartPedestal")
 
 	defer clean()
+
+	err = initModule(stage)
+	if err != nil {
+		return err
+	}
+
+	errChan := make(chan error)
+	if config.EnableHttpServer {
+		go func() {
+			errChan <- startHttpServer()
+		}()
+	}
+
+	return <-errChan
+}
+
+func initModule(stage *log.Stage) (err error) {
+	err = log.InitLoggerOnPedestal()
+	if err != nil {
+		return err
+	}
 
 	err = plugin.ReLoadPluginWithDir(stage, config.PluginDir)
 	if err != nil {
@@ -67,14 +89,7 @@ func run(cmd *cobra.Command, _ []string) (err error) {
 		return err
 	}
 
-	errChan := make(chan error)
-	if config.EnableHttpServer {
-		go func() {
-			errChan <- startHttpServer()
-		}()
-	}
-
-	return <-errChan
+	return nil
 }
 
 func clean() {
