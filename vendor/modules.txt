@@ -54,6 +54,9 @@ github.com/go-redis/redis/v8/internal/pool
 github.com/go-redis/redis/v8/internal/proto
 github.com/go-redis/redis/v8/internal/rand
 github.com/go-redis/redis/v8/internal/util
+# github.com/go-sql-driver/mysql v1.6.0
+## explicit; go 1.10
+github.com/go-sql-driver/mysql
 # github.com/gogf/gf/v2 v2.0.4
 ## explicit; go 1.15
 github.com/gogf/gf/v2
@@ -66,6 +69,9 @@ github.com/gogf/gf/v2/container/gset
 github.com/gogf/gf/v2/container/gtree
 github.com/gogf/gf/v2/container/gtype
 github.com/gogf/gf/v2/container/gvar
+github.com/gogf/gf/v2/crypto/gaes
+github.com/gogf/gf/v2/crypto/gmd5
+github.com/gogf/gf/v2/database/gdb
 github.com/gogf/gf/v2/database/gredis
 github.com/gogf/gf/v2/debug/gdebug
 github.com/gogf/gf/v2/encoding/gbase64
@@ -73,27 +79,39 @@ github.com/gogf/gf/v2/encoding/gbinary
 github.com/gogf/gf/v2/encoding/gcharset
 github.com/gogf/gf/v2/encoding/gcompress
 github.com/gogf/gf/v2/encoding/ghash
+github.com/gogf/gf/v2/encoding/ghtml
 github.com/gogf/gf/v2/encoding/gini
 github.com/gogf/gf/v2/encoding/gjson
 github.com/gogf/gf/v2/encoding/gtoml
+github.com/gogf/gf/v2/encoding/gurl
 github.com/gogf/gf/v2/encoding/gxml
 github.com/gogf/gf/v2/encoding/gyaml
 github.com/gogf/gf/v2/errors/gcode
 github.com/gogf/gf/v2/errors/gerror
+github.com/gogf/gf/v2/frame/g
+github.com/gogf/gf/v2/frame/gins
 github.com/gogf/gf/v2/i18n/gi18n
 github.com/gogf/gf/v2/internal/command
 github.com/gogf/gf/v2/internal/empty
 github.com/gogf/gf/v2/internal/fileinfo
+github.com/gogf/gf/v2/internal/httputil
 github.com/gogf/gf/v2/internal/intlog
 github.com/gogf/gf/v2/internal/json
 github.com/gogf/gf/v2/internal/reflection
 github.com/gogf/gf/v2/internal/rwmutex
 github.com/gogf/gf/v2/internal/tracing
 github.com/gogf/gf/v2/internal/utils
+github.com/gogf/gf/v2/net/gclient
+github.com/gogf/gf/v2/net/ghttp
+github.com/gogf/gf/v2/net/ghttp/internal/swaggerui
 github.com/gogf/gf/v2/net/gipv4
 github.com/gogf/gf/v2/net/gipv6
+github.com/gogf/gf/v2/net/gsel
+github.com/gogf/gf/v2/net/gsvc
+github.com/gogf/gf/v2/net/gtcp
 github.com/gogf/gf/v2/net/gtrace
 github.com/gogf/gf/v2/net/gtrace/internal/provider
+github.com/gogf/gf/v2/net/gudp
 github.com/gogf/gf/v2/os/gcache
 github.com/gogf/gf/v2/os/gcfg
 github.com/gogf/gf/v2/os/gcmd
@@ -105,17 +123,22 @@ github.com/gogf/gf/v2/os/gfsnotify
 github.com/gogf/gf/v2/os/glog
 github.com/gogf/gf/v2/os/gmlock
 github.com/gogf/gf/v2/os/gmutex
+github.com/gogf/gf/v2/os/gproc
 github.com/gogf/gf/v2/os/gres
 github.com/gogf/gf/v2/os/grpool
+github.com/gogf/gf/v2/os/gsession
 github.com/gogf/gf/v2/os/gspath
 github.com/gogf/gf/v2/os/gstructs
 github.com/gogf/gf/v2/os/gtime
 github.com/gogf/gf/v2/os/gtimer
+github.com/gogf/gf/v2/os/gview
+github.com/gogf/gf/v2/protocol/goai
 github.com/gogf/gf/v2/text/gregex
 github.com/gogf/gf/v2/text/gstr
 github.com/gogf/gf/v2/util/gconv
 github.com/gogf/gf/v2/util/gmeta
 github.com/gogf/gf/v2/util/gmode
+github.com/gogf/gf/v2/util/gpage
 github.com/gogf/gf/v2/util/grand
 github.com/gogf/gf/v2/util/gtag
 github.com/gogf/gf/v2/util/guid
@@ -130,6 +153,12 @@ github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/empty
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/gorilla/websocket v1.4.2
+## explicit; go 1.12
+github.com/gorilla/websocket
+# github.com/grokify/html-strip-tags-go v0.0.1
+## explicit; go 1.13
+github.com/grokify/html-strip-tags-go
 # github.com/hashicorp/go-hclog v0.14.1
 ## explicit; go 1.13
 github.com/hashicorp/go-hclog
@@ -154,12 +183,18 @@ github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.14
 ## explicit; go 1.12
 github.com/mattn/go-isatty
+# github.com/mattn/go-runewidth v0.0.9
+## explicit; go 1.9
+github.com/mattn/go-runewidth
 # github.com/mitchellh/go-testing-interface v0.0.0-20171004221916-a61a99592b77
 ## explicit
 github.com/mitchellh/go-testing-interface
 # github.com/oklog/run v1.0.0
 ## explicit
 github.com/oklog/run
+# github.com/olekukonko/tablewriter v0.0.5
+## explicit; go 1.12
+github.com/olekukonko/tablewriter
 # github.com/panjf2000/ants/v2 v2.4.8
 ## explicit; go 1.14
 github.com/panjf2000/ants/v2
@@ -209,7 +244,9 @@ golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
+golang.org/x/net/internal/socks
 golang.org/x/net/internal/timeseries
+golang.org/x/net/proxy
 golang.org/x/net/trace
 # golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e
 ## explicit; go 1.17

@@ -17,8 +17,8 @@ var (
 	poolMutex = &sync.RWMutex{}
 )
 
-func ListActionName(stage *log.Stage) []string {
-	stage = stage.Go("ListActionName")
+func ListActionKey(stage *log.Stage) []string {
+	stage = stage.Go("ListActionKey")
 	names := []string{}
 	poolMutex.RLock()
 	for _, s := range pool {
