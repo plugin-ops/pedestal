@@ -37,6 +37,7 @@ func registerRouter(s *ghttp.Server) {
 
 		group.GET("action/list", v1.ListAction)
 
+		group.POST("rule/all/reload", v1.ReloadAllRule)
 		group.POST("rule/run", v1.RunRule)
 		group.POST("rule/add", v1.AddRule)
 	})

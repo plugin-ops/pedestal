@@ -27,3 +27,7 @@ func RunRule(r *ghttp.Request) {
 		RunRuleResV1: res,
 	})
 }
+
+func ReloadAllRule(r *ghttp.Request) {
+	base.SendResponseExit(r, base.NewBaseReq(server.ReloadAllRule()))
+}

@@ -3,6 +3,7 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"github.com/plugin-ops/pedestal/pedestal/config"
 
 	"github.com/plugin-ops/pedestal/pedestal/execute"
 	"github.com/plugin-ops/pedestal/pedestal/log"
@@ -66,4 +67,10 @@ func RunRule(req *RunRuleReqV1) (*RunRuleResV1, error) {
 	return &RunRuleResV1{
 		TaskID: id,
 	}, err
+}
+
+func ReloadAllRule() error {
+	stage := log.NewStage().Enter("ReloadAllRule")
+
+	return rule.ReLoadRuleWithDir(stage, config.RuleDir)
 }

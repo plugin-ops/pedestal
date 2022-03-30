@@ -205,7 +205,7 @@ func (d *driverGRPCServer) Do(ctx context.Context, input *proto.DoInput) (*proto
 	for i, v := range input.GetValue() {
 		in[i] = v
 	}
-	resp, err := d.impl.Do(action.ConvertSliceToValueSlice(in)...)
+	resp, err := d.impl.Do(action.ConvertSliceToValueSlice(in...)...)
 	if err != nil {
 		return &proto.DoOutput{}, err
 	}

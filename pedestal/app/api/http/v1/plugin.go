@@ -1,11 +1,10 @@
 package v1
 
 import (
+	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/plugin-ops/pedestal/pedestal/app/api/http/base"
 	server "github.com/plugin-ops/pedestal/pedestal/app/server/v1"
 	"github.com/plugin-ops/pedestal/pedestal/config"
-
-	"github.com/gogf/gf/v2/net/ghttp"
 )
 
 func ReloadAllPlugins(r *ghttp.Request) {

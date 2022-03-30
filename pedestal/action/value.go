@@ -7,6 +7,9 @@ type Value struct {
 }
 
 func NewValue(i interface{}) *Value {
+	if v, ok := i.(*Value); ok {
+		return v
+	}
 	return &Value{gvar.New(i, true)}
 }
 
